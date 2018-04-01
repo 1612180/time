@@ -286,17 +286,17 @@ LeapYear:
 	addi $t1, $zero, 400
 	div $t0, $t1
 	mfhi $t2 				# $t2 = year % 400
-	beq $t2, $zero, LeapYear_nhuan 		# year chia het cho 400
+	beq $t2, $zero, LeapYear_nhuan 		# neu year chia het cho 400
 
 	addi $t1, $zero, 4
 	div $t0, $t1
 	mfhi $t2 				# $t2 = year % 4
-	bne $t2, $zero, LeapYear_khong_nhuan 	# year khong chia het cho 4
+	bne $t2, $zero, LeapYear_khong_nhuan 	# neu year khong chia het cho 4
 
 	addi $t1, $zero, 100
 	div $t0, $t1
 	mfhi $t2 				# $t2 = year % 100
-	beq $t2, $zero, LeapYear_khong_nhuan 	# year chia het cho 4 va 100
+	beq $t2, $zero, LeapYear_khong_nhuan 	# neu year chia het cho 4 va 100
 LeapYear_nhuan:
 	addi $v0, $zero, 1			# $t0 tra ve 1 la nam nhuan
 	j LeapYear_exit
@@ -311,7 +311,7 @@ LeapYear_exit:
 
 # str "12345" -> int 12345
 # only positive, consider input is correct (only digits)
-#	$a0 string
+#	$a0 str
 #	$a1 from
 # 	$a2 to
 atoi:
@@ -343,21 +343,21 @@ check_hop_le:
 
 	# Check month in 1..12
 	jal Month
-	add $t1, $zero, $v0	# $t1 save month
-	slti $t0, $t1, 1	# $t0 = month < 1
-	bne $t0, $zero, check_hop_le_khong
-	slti $t0, $t1, 13	# $t0 = month < 13
-	beq $t0, $zero , check_hop_le_khong
-	sw $t1, 4($sp)		# $t1 will lose in next jal
+	add $t1, $zero, $v0			# $t1 = month
+	slti $t0, $t1, 1
+	bne $t0, $zero, check_hop_le_khong 	# neu month < 1
+	slti $t0, $t1, 13
+	beq $t0, $zero , check_hop_le_khong 	# neu month >= 13
+	sw $t1, 4($sp)				# $t1 will lose in next jal
 
 	# Check day in month
 	jal Day
-	add $t2, $zero, $v0	# $t2 save day
-	lw $t1, 4($sp)		# restore $t1 after jal
+	add $t2, $zero, $v0			# $t2 = day
+	lw $t1, 4($sp)				# restore $t1 after jal
 
-	addi $t3, $zero, 1	# thang 1
+	addi $t3, $zero, 1			# $t3 = thang 1
 	beq $t1, $t3, check_31_ngay
-	addi $t3, $zero, 2
+	addi $t3, $zero, 2			# $t3 = thang 2
 	beq $t1, $t3, check_thang_2
 	addi $t3, $zero, 3
 	beq $t1, $t3, check_31_ngay
@@ -380,37 +380,37 @@ check_hop_le:
 	addi $t3, $zero, 12
 	beq $t1, $t3, check_31_ngay
 check_31_ngay:
-	slti $t0, $t2, 1	# $t0 = day < 1
-	bne $t0, $zero, check_hop_le_khong
-	slti $t0, $t2, 32	# $t0 = day < 32
-	beq $t0, $zero, check_hop_le_khong
+	slti $t0, $t2, 1
+	bne $t0, $zero, check_hop_le_khong	# neu day < 1
+	slti $t0, $t2, 32
+	beq $t0, $zero, check_hop_le_khong	# neu day >= 32
 	j check_hop_le_co
 check_30_ngay:
-	slti $t0, $t2, 1	# $t0 = day < 1
-	bne $t0, $zero, check_hop_le_khong
-	slti $t0, $t2, 31	# $t0 = day < 31
-	beq $t0, $zero, check_hop_le_khong
+	slti $t0, $t2, 1
+	bne $t0, $zero, check_hop_le_khong	# neu day < 1
+	slti $t0, $t2, 31
+	beq $t0, $zero, check_hop_le_khong	# neu day >= 31
 	j check_hop_le_co
 check_thang_2:
-	slti $t0, $t2, 1	# $t0 = day < 1
-	bne $t0, $zero, check_hop_le_khong
-	slti $t0, $t2, 30	# $t0 = day < 30
-	beq $t0, $zero, check_hop_le_khong
-	sw $t2, 0($sp)		# save $t2 before jal
+	slti $t0, $t2, 1
+	bne $t0, $zero, check_hop_le_khong	# neu day <
+	slti $t0, $t2, 30
+	beq $t0, $zero, check_hop_le_khong	# neu day >= 30
+	sw $t2, 0($sp)				# save $t2 before jal
 	jal LeapYear
-	add $t4, $zero, $v0	# $t4 = 0 la nam khong nhuan
-	lw $t2, 0($sp)		# restore $t2 after jal
-	beq $t4, $zero, check_thang_2_khong_nhuan
+	add $t4, $zero, $v0			# check nam khong nhuan
+	lw $t2, 0($sp)				# restore $t2 after jal
+	beq $t4, $zero, check_thang_2_khong_nhuan	# neu nam khong nhuan
 	j check_hop_le_co
 check_thang_2_khong_nhuan:
 	addi $t5, $zero, 29
-	beq $t2, $t5, check_hop_le_khong
+	beq $t2, $t5, check_hop_le_khong	# neu day = 29
 	j check_hop_le_co
 check_hop_le_co:
-	addi $v0, $zero, 1
+	addi $v0, $zero, 1			# $v0 tra ve 1 nam nhuan
 	j check_hop_le_exit
 check_hop_le_khong:
-	add $v0, $zero, $zero
+	add $v0, $zero, $zero			# $v0 tra ve 0 nam khong nhuan
 	j check_hop_le_exit
 check_hop_le_exit:
 	# restore from stack
