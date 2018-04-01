@@ -43,16 +43,32 @@ main:
         syscall
       	add $s2, $zero, $v0     # $v0 save read int
 
-        # goi ham Date
+        # ham Date
         add $a0, $zero, $s0
         add $a1, $zero, $s1
         add $a2, $zero, $s2
         la $a3, str_TIME
         jal Date
-
-        # print DD/MM/YYYY
+        # print Date: DD/MM/YYYY
         add $a0, $zero, $v0
         addi $v0, $zero, 4
+        syscall
+        # print '\n'
+        add $a0, $zero, 10
+        addi $v0, $zero, 11
+        syscall
+
+        # goi ham Convert
+        la $a0, str_TIME
+        addi $a1, $zero, 65
+        jal Convert
+        # print Convert
+        add $a0, $zero, $v0
+        addi $v0, $zero, 4
+        syscall
+        # print '\n'
+        add $a0, $zero, 10
+        addi $v0, $zero, 11
         syscall
 
         # exit
@@ -72,9 +88,9 @@ Date:
 	mfhi $t3		# DAY % 10
 	addi $t2, $t2, 48	# 48 is '0'
 	addi $t3, $t3, 48
-	sb $t2, 0($a3)
+	sb $t2, 0($a3)		# str_TIME[0]
 	sb $t3, 1($a3)
-	addi $t4, $zero, 47	# 47 is '\'
+	addi $t4, $zero, 47	# 47 is '/'
 	sb $t4, 2($a3)
 
 	# MONTH -> MM
@@ -115,6 +131,39 @@ Date:
 	sb $t0, 9($a3)
 
 	# exit
-	sb $zero, 10($a3)
+	sb $zero, 10($a3)	# str_TIME[10]= '\0'
 	add $v0, $zero, $a3
+	jr $ra
+
+# Ham chuyen doi dinh dang DD/MM/YYYY
+#	$a0 str_TIME
+#	$a1 type
+#	type 'A': MM/DD/YYYY
+#	type 'B': Month DD, YYYY
+#	type 'C':
+Convert:
+	beq $a1, 65, Convert_A	# 65 is 'A'
+	beq $a1, 66, Convert_B
+	beq $a1, 67, Convert_C
+	j Convert_exit
+Convert_A:
+	# DD/MM/YYYY -> MM/DD/YYYY
+	# only swap day <-> month
+	# get DD, MM
+	lb $t0, 0($a0)
+	lb $t1, 1($a0)
+	lb $t3, 3($a0)
+	lb $t4, 4($a0)
+	# swap
+	sb $t3, 0($a0)
+	sb $t4, 1($a0)
+	sb $t0, 3($a0)
+	sb $t1, 4($a0)
+	j Convert_exit
+Convert_B:
+	j Convert_exit
+Convert_C:
+	j Convert_exit
+Convert_exit:
+	add $v0, $zero, $a0
 	jr $ra
