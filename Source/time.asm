@@ -17,10 +17,6 @@ msg_nhap_thang:
         .asciiz "Nhap thang MONTH: "
 msg_nhap_nam:
         .asciiz "Nhap nam YEAR: "
-day_in_month_reg:
-	.word 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
-day_in_month_nhuan:
-	.word 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 str_TIME:
         .space 1024
 
@@ -66,7 +62,7 @@ main:
         syscall
 
         la $a0, str_TIME
-        jal LeapYear
+        jal check_hop_le
         add $a0, $zero, $v0
         addi $v0, $zero, 1
         syscall
@@ -290,4 +286,88 @@ atoi_sum_loop:
 	addi $t0, $t0, 1	# p += 1
 	j atoi_sum_loop
 atoi_exit:
+	jr $ra
+
+# Ham kiem tra tinh hop le cua ngay, thang, nam vua nhap
+# 	$a0 str_TIME
+check_hop_le:
+	# save to stack
+	addi $sp, $sp, -12
+	sw $ra, 8($sp)
+
+	# Check month in 1..12
+	jal Month
+	add $t1, $zero, $v0	# $t1 save month
+	slti $t0, $t1, 1	# $t0 = month < 1
+	bne $t0, $zero, check_hop_le_khong
+	slti $t0, $t1, 13	# $t0 = month < 13
+	beq $t0, $zero , check_hop_le_khong
+	sw $t1, 4($sp)		# $t1 will lose in next jal
+
+	# Check day in month
+	jal Day
+	add $t2, $zero, $v0	# $t2 save day
+	lw $t1, 4($sp)		# restore $t1 after jal
+
+	addi $t3, $zero, 1	# thang 1
+	beq $t1, $t3, check_31_ngay
+	addi $t3, $zero, 2
+	beq $t1, $t3, check_thang_2
+	addi $t3, $zero, 3
+	beq $t1, $t3, check_31_ngay
+	addi $t3, $zero, 4
+	beq $t1, $t3, check_30_ngay
+	addi $t3, $zero, 5
+	beq $t1, $t3, check_31_ngay
+	addi $t3, $zero, 6
+	beq $t1, $t3, check_30_ngay
+	addi $t3, $zero, 7
+	beq $t1, $t3, check_31_ngay
+	addi $t3, $zero, 8
+	beq $t1, $t3, check_31_ngay
+	addi $t3, $zero, 9
+	beq $t1, $t3, check_30_ngay
+	addi $t3, $zero, 10
+	beq $t1, $t3, check_31_ngay
+	addi $t3, $zero, 11
+	beq $t1, $t3, check_30_ngay
+	addi $t3, $zero, 12
+	beq $t1, $t3, check_31_ngay
+check_31_ngay:
+	slti $t0, $t2, 1	# $t0 = day < 1
+	bne $t0, $zero, check_hop_le_khong
+	slti $t0, $t2, 32	# $t0 = day < 32
+	beq $t0, $zero, check_hop_le_khong
+	j check_hop_le_co
+check_30_ngay:
+	slti $t0, $t2, 1	# $t0 = day < 1
+	bne $t0, $zero, check_hop_le_khong
+	slti $t0, $t2, 31	# $t0 = day < 31
+	beq $t0, $zero, check_hop_le_khong
+	j check_hop_le_co
+check_thang_2:
+	slti $t0, $t2, 1	# $t0 = day < 1
+	bne $t0, $zero, check_hop_le_khong
+	slti $t0, $t2, 30	# $t0 = day < 30
+	beq $t0, $zero, check_hop_le_khong
+	sw $t2, 0($sp)		# save $t2 before jal
+	jal LeapYear
+	add $t4, $zero, $v0	# $t4 = 0 la nam khong nhuan
+	lw $t2, 0($sp)		# restore $t2 after jal
+	beq $t4, $zero, check_thang_2_khong_nhuan
+	j check_hop_le_co
+check_thang_2_khong_nhuan:
+	addi $t5, $zero, 29
+	beq $t2, $t5, check_hop_le_khong
+	j check_hop_le_co
+check_hop_le_co:
+	addi $v0, $zero, 1
+	j check_hop_le_exit
+check_hop_le_khong:
+	add $v0, $zero, $zero
+	j check_hop_le_exit
+check_hop_le_exit:
+	# restore from stack
+	lw $ra, 8($sp)
+	addi $sp, $sp, 12
 	jr $ra
