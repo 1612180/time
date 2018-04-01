@@ -429,18 +429,18 @@ GetTime:
 	sw $a1, 4($sp)
 
 	jal Year
-	add $t0, $zero, $v0	# $t0 save Year(TIME_1)
+	add $t0, $zero, $v0	# $t0 = Year(TIME_1)
 
 	sw $t0, 0($sp)		# $t0 will lose in next jal
 	lw $a0, 4($sp)		# load TIME_2 to $a0
 	jal Year
-	add $t1, $zero, $v0	# $t1 save Year(TIME_2)
+	add $t1, $zero, $v0	# $t1 = Year(TIME_2)
 	lw $t0, 0($sp)		# restore $t0
 
-	sub $v0, $t0, $t1 	# year diff between TIME_1 and TIME_2
-	slt $t2, $v0, $zero	# $t2 = $v0 < 0
+	sub $v0, $t0, $t1 	# Year(TIME_1) - Year(TIME_2)
+	slt $t2, $v0, $zero
 	beq $t2, $zero, GetTime_exit
-	sub $v0, $zero, $v0	# doi dau
+	sub $v0, $zero, $v0	# doi dau neu $v0 < 0
 
 GetTime_exit:
 	# restore from stack
