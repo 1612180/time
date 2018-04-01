@@ -129,8 +129,8 @@ Date:
 	# DAY -> DD
 	addi $t1, $zero, 10
 	div $a0, $t1
-	mflo $t2		# $t2 save DAY / 10
-	mfhi $t3		# $t3 save DAY % 10
+	mflo $t2		# $t2 = DAY / 10
+	mfhi $t3		# $t3 = DAY % 10
 	addi $t2, $t2, 48	# $t2 from int to char, 48 is '0'
 	addi $t3, $t3, 48	# $t3 from int to char
 	sb $t2, 0($a3)		# TIME[0] = $t2
@@ -141,8 +141,8 @@ Date:
 	# MONTH -> MM
 	addi $t1, $zero, 10
 	div $a1, $t1
-	mflo $t2		# $t2 MONTH / 10
-	mfhi $t3		# $t3 MONTH % 10
+	mflo $t2		# $t2 = MONTH / 10
+	mfhi $t3		# $t3 = MONTH % 10
 	addi $t2, $t2, 48	# $t2 from int to char
 	addi $t3, $t3, 48	# $t3 from int to char
 	sb $t2, 3($a3)		# TIME[3] = $t2
@@ -154,29 +154,29 @@ Date:
 	add $t0, $zero, $a2	# $t0 save YEAR
 	addi $t1, $zero, 1000
 	div $t0, $t1
-	mflo $t2		# $t2 save YEAR / 1000
-	mfhi $t0		# $t0 save YEAR % 1000
+	mflo $t2		# $t2 = YEAR / 1000
+	mfhi $t0		# $t0 = YEAR % 1000
 	addi $t2, $t2, 48	# $t2 from int to char
 	sb $t2, 6($a3)		# TIME[6] = $t2
 
 	addi $t1, $zero, 100
 	div $t0, $t1
-	mflo $t2		# $t2 save (YEAR % 1000) / 100
-	mfhi $t0		# $t0 save YEAR % 100
+	mflo $t2		# $t2 = (YEAR % 1000) / 100
+	mfhi $t0		# $t0 = YEAR % 100
 	addi $t2, $t2, 48	# $t2 from int to char
 	sb $t2, 7($a3)		# TIME[7] = $t2
 
 	addi $t1, $zero, 10
 	div $t0, $t1
-	mflo $t2		# $t2 save (YEAR % 100) / 10
-	mfhi $t0		# $t0 save YEAR % 10
+	mflo $t2		# $t2 = (YEAR % 100) / 10
+	mfhi $t0		# $t0 = YEAR % 10
 	addi $t2, $t2, 48	# $t2 from int to char
 	addi $t0, $t0, 48	# $t0 from int to char
 	sb $t2, 8($a3)		# TIME[8] = $t2
 	sb $t0, 9($a3)		# TIME[9] = $t0
 
 	# exit
-	sb $zero, 10($a3)	# TIME[10]= '\0'
+	sb $zero, 10($a3)	# TIME[10] = '\0'
 	add $v0, $zero, $a3	# tra ve $a3 giu dia chi TIME
 	jr $ra
 
@@ -195,15 +195,15 @@ Convert_A:
 	# DD/MM/YYYY -> MM/DD/YYYY
 	# only swap day <-> month
 	# get DD, MM
-	lb $t0, 0($a0)
-	lb $t1, 1($a0)
-	lb $t3, 3($a0)
-	lb $t4, 4($a0)
+	lb $t0, 0($a0)		# $t0 = TIME[0]
+	lb $t1, 1($a0)		# $t1 = TIME[1]
+	lb $t3, 3($a0)		# $t3 = TIME[3]
+	lb $t4, 4($a0)		# $t4 = TIME[4]
 	# swap
-	sb $t3, 0($a0)
-	sb $t4, 1($a0)
-	sb $t0, 3($a0)
-	sb $t1, 4($a0)
+	sb $t3, 0($a0)		# TIME[0] = $t3
+	sb $t4, 1($a0)		# TIME[1] = $t4
+	sb $t0, 3($a0)		# TIME[3] = $t0
+	sb $t1, 4($a0)		# TIME[4] = $t1
 	j Convert_exit
 Convert_B:
 	# DD/MM/YYYY -> Month DD, YYYY
@@ -213,7 +213,7 @@ Convert_C:
 	# DD/MM/YYYY -> DD Month, YYYY
 	j Convert_exit
 Convert_exit:
-	add $v0, $zero, $a0
+	add $v0, $zero, $a0	# tra ve $a0 giu dia chi TIME
 	jr $ra
 
 # Ham tra ve ngay trong TIME: DD/MM/YYYY
