@@ -2,12 +2,16 @@
 # 1612180 - Nguyen Tran Hau
 # 1612628 - Nguyen Duy Thanh
 # 1612403 - Tran Hoai Nam
+#	TIME_1
 #       $s0 save DAY
 #       $s1 save MONTH
 #       $s2 save YEAR
+#	TIME_2
+#       $s3 save DAY
+#       $s4 save MONTH
+#       $s5 save YEAR
 
 # TODO Convert in type B, C
-# TODO int GetTime(char* TIME_1, char* TIME_2)
 # TODO char* Weekday(char* TIME)
 
         .data
@@ -17,11 +21,14 @@ msg_nhap_thang:
         .asciiz "Nhap thang MONTH: "
 msg_nhap_nam:
         .asciiz "Nhap nam YEAR: "
-str_TIME:
+TIME_1:
         .space 1024
+TIME_2:
+	.space 1024
 
         .text
 main:
+	# nhap TIME_1
         # nhap ngay, save in $s0
         addi $v0, $zero, 4      # print str
         la $a0, msg_nhap_ngay
@@ -31,26 +38,26 @@ main:
         add $s0, $zero, $v0     # $v0 save read int
 
         # nhap thang, save in $s1
-        addi $v0, $zero, 4     	# print str
+        addi $v0, $zero, 4
         la $a0, msg_nhap_thang
         syscall
-        addi $v0, $zero, 5      # read int
+        addi $v0, $zero, 5
         syscall
-        add $s1, $zero, $v0     # $v0 save read int
+        add $s1, $zero, $v0
 
         # nhap nam, save in $s2
-        addi $v0, $zero, 4      # print str
+        addi $v0, $zero, 4
         la $a0, msg_nhap_nam
         syscall
-        addi $v0, $zero, 5      # read int
+        addi $v0, $zero, 5
         syscall
-      	add $s2, $zero, $v0     # $v0 save read int
+      	add $s2, $zero, $v0
 
         # ham Date
         add $a0, $zero, $s0
         add $a1, $zero, $s1
         add $a2, $zero, $s2
-        la $a3, str_TIME
+        la $a3, TIME_1
         jal Date
         # print Date: DD/MM/YYYY
         add $a0, $zero, $v0
@@ -61,8 +68,50 @@ main:
         addi $v0, $zero, 11
         syscall
 
-        la $a0, str_TIME
-        jal check_hop_le
+	# nhap TIME_2
+        # nhap ngay, save in $s0
+        addi $v0, $zero, 4      # print str
+        la $a0, msg_nhap_ngay
+        syscall
+        addi $v0, $zero, 5      # read int
+        syscall
+        add $s3, $zero, $v0     # $v0 save read int
+
+        # nhap thang, save in $s1
+        addi $v0, $zero, 4
+        la $a0, msg_nhap_thang
+        syscall
+        addi $v0, $zero, 5
+        syscall
+        add $s4, $zero, $v0
+
+        # nhap nam, save in $s2
+        addi $v0, $zero, 4
+        la $a0, msg_nhap_nam
+        syscall
+        addi $v0, $zero, 5
+        syscall
+      	add $s5, $zero, $v0
+
+        # ham Date
+        add $a0, $zero, $s3
+        add $a1, $zero, $s4
+        add $a2, $zero, $s5
+        la $a3, TIME_2
+        jal Date
+        # print Date: DD/MM/YYYY
+        add $a0, $zero, $v0
+        addi $v0, $zero, 4
+        syscall
+        # print '\n'
+        add $a0, $zero, 10
+        addi $v0, $zero, 11
+        syscall
+
+        # GetTime
+        la $a0, TIME_1
+        la $a1, TIME_2
+        jal GetTime
         add $a0, $zero, $v0
         addi $v0, $zero, 1
         syscall
@@ -75,7 +124,7 @@ main:
 #       $a0 DAY
 #       $a1 MONTH
 #       $a2 YEAR
-#       $a3 str_TIME
+#       $a3 TIME
 Date:
 	# DAY -> DD
 	addi $t1, $zero, 10
@@ -132,7 +181,7 @@ Date:
 	jr $ra
 
 # Ham chuyen doi dinh dang DD/MM/YYYY
-#	$a0 str_TIME
+#	$a0 TIME
 #	$a1 type
 #	type 'A': MM/DD/YYYY
 #	type 'B': Month DD, YYYY
@@ -168,7 +217,7 @@ Convert_exit:
 	jr $ra
 
 # Ham tra ve ngay trong TIME: DD/MM/YYYY
-#	$a0 str_TIME
+#	$a0 TIME
 Day:
 	# save to stack
 	addi $sp, $sp, -4
@@ -187,7 +236,7 @@ Day:
 	jr $ra
 
 # Ham tra ve thang trong TIME: DD/MM/YYYY
-#	$a0 str_TIME
+#	$a0 TIME
 Month:
 	# save to stack
 	addi $sp, $sp, -4
@@ -206,7 +255,7 @@ Month:
 	jr $ra
 
 # Ham tra ve nam trong TIME: DD/MM/YYYY
-#	$a0 str_TIME
+#	$a0 TIME
 Year:
 	# save to stack
 	addi $sp, $sp, -4
@@ -225,7 +274,7 @@ Year:
 	jr $ra
 
 # Ham kiem tra nam nhuan
-#	$a0 str_TIME
+#	$a0 TIME
 LeapYear:
 	# save to stack
 	addi $sp, $sp, -4
@@ -240,7 +289,7 @@ LeapYear:
 	mfhi $t2 		#  year % 400
 	beq $t2, $zero, LeapYear_nhuan
 
-	# if year % 4 !=0, nam khong nhuan
+	# if year % 4 != 0, nam khong nhuan
 	addi $t1, $zero, 4
 	div $t0, $t1
 	mfhi $t2 		# year % 4
@@ -265,7 +314,7 @@ LeapYear_exit:
 
 # str "12345" -> int 12345
 # only positive, consider input is correct (only digits)
-#	$a0 str
+#	$a0 string
 #	$a1 from
 # 	$a2 to
 atoi:
@@ -289,7 +338,7 @@ atoi_exit:
 	jr $ra
 
 # Ham kiem tra tinh hop le cua ngay, thang, nam vua nhap
-# 	$a0 str_TIME
+# 	$a0 TIME
 check_hop_le:
 	# save to stack
 	addi $sp, $sp, -12
@@ -370,4 +419,36 @@ check_hop_le_exit:
 	# restore from stack
 	lw $ra, 8($sp)
 	addi $sp, $sp, 12
+	jr $ra
+
+# Ham tra ve khoang cach thoi gian, tinh bang nam
+#	$a0 TIME_1
+#	$a1 TIME_2
+GetTime:
+	# save to stack
+	addi $sp, $sp, -16
+	sw $ra, 12($sp)
+	sw $a0, 8($sp)
+	sw $a1, 4($sp)
+
+	jal Year
+	add $t0, $zero, $v0	# $t0 save Year(TIME_1)
+
+	sw $t0, 0($sp)		# $t0 will lose in next jal
+	lw $a0, 4($sp)		# load TIME_2 to $a0
+	jal Year
+	add $t1, $zero, $v0	# $t1 save Year(TIME_2)
+	lw $t0, 0($sp)		# restore $t0
+
+	sub $v0, $t0, $t1 	# year diff between TIME_1 and TIME_2
+	slt $t2, $v0, $zero	# $t2 = $v0 < 0
+	beq $t2, $zero, GetTime_exit
+	sub $v0, $zero, $v0	# doi dau
+
+GetTime_exit:
+	# restore from stack
+	lw $ra, 12($sp)
+	lw $a0, 8($sp)
+	lw $a1, 4($sp)
+	addi $sp, $sp, 16
 	jr $ra
