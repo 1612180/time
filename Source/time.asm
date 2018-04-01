@@ -1,4 +1,7 @@
 # Thu vien TIME bang MIPS
+# 1612180 - Nguyen Tran Hau
+# 1612628 - Nguyen Duy Thanh
+# 1612403 - Tran Hoai Nam
 #       $s0 save DAY
 #       $s1 save MONTH
 #       $s2 save YEAR
@@ -140,7 +143,7 @@ Date:
 #	$a1 type
 #	type 'A': MM/DD/YYYY
 #	type 'B': Month DD, YYYY
-#	type 'C':
+#	type 'C': DD Month, YYYY
 Convert:
 	beq $a1, 65, Convert_A	# 65 is 'A'
 	beq $a1, 66, Convert_B
@@ -161,9 +164,38 @@ Convert_A:
 	sb $t1, 4($a0)
 	j Convert_exit
 Convert_B:
+	# DD/MM/YYYY -> Month DD, YYYY
+
 	j Convert_exit
 Convert_C:
+	# DD/MM/YYYY -> DD Month, YYYY
 	j Convert_exit
 Convert_exit:
 	add $v0, $zero, $a0
+	jr $ra
+
+# str "12345" -> int 12345
+# only positive, consider input is correct (only digits)
+#	$a0 str
+#	$a1 from
+# 	$a2 to
+atoi:
+	add $v0, $zero, $zero	# $v0 store result
+	add $t0, $a0, $a1	# p = str + from
+	add $t1, $a0, $a2	# str + to
+	addi $t1, $t1, 1
+atoi_sum_loop:
+	slt $t2, $t0, $t1	# $t2 = p < str + to + 1
+	beq $t2, $zero, atoi_exit
+
+	# result = result * 10 + *p - '0'
+	addi $t3, $zero, 10
+	mult $v0, $t3		# result * 10
+	mflo $v0		# get from LO
+	lb $t3, 0($t0)
+	addi $t3, $t3, -48	# *p - '0'
+	add $v0, $v0, $t3
+	addi $t0, $t0, 1
+	j atoi_sum_loop
+atoi_exit:
 	jr $ra
