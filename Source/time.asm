@@ -69,7 +69,7 @@ main:
         syscall
 
 	# nhap TIME_2
-        # nhap ngay, save in $s0
+        # nhap ngay, save in $s3
         addi $v0, $zero, 4      # print str
         la $a0, msg_nhap_ngay
         syscall
@@ -77,7 +77,7 @@ main:
         syscall
         add $s3, $zero, $v0     # $v0 save read int
 
-        # nhap thang, save in $s1
+        # nhap thang, save in $s4
         addi $v0, $zero, 4
         la $a0, msg_nhap_thang
         syscall
@@ -85,7 +85,7 @@ main:
         syscall
         add $s4, $zero, $v0
 
-        # nhap nam, save in $s2
+        # nhap nam, save in $s5
         addi $v0, $zero, 4
         la $a0, msg_nhap_nam
         syscall
