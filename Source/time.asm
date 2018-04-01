@@ -7,7 +7,6 @@
 #       $s2 save YEAR
 
 # TODO Convert in type B, C
-# TODO int LeapYear(char* TIME)
 # TODO int GetTime(char* TIME_1, char* TIME_2)
 # TODO char* Weekday(char* TIME)
 
@@ -67,7 +66,7 @@ main:
         syscall
 
         la $a0, str_TIME
-        jal Year
+        jal LeapYear
         add $a0, $zero, $v0
         addi $v0, $zero, 1
         syscall
@@ -229,6 +228,44 @@ Year:
 	addi $sp, $sp, 4
 	jr $ra
 
+# Ham kiem tra nam nhuan
+#	$a0 str_TIME
+LeapYear:
+	# save to stack
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+
+	jal Year
+	add $t0, $zero, $v0	# $t0 save year
+
+	# if year % 400 == 0, nam nhuan
+	addi $t1, $zero, 400
+	div $t0, $t1
+	mfhi $t2 		#  year % 400
+	beq $t2, $zero, LeapYear_nhuan
+
+	# if year % 4 !=0, nam khong nhuan
+	addi $t1, $zero, 4
+	div $t0, $t1
+	mfhi $t2 		# year % 4
+	bne $t2, $zero, LeapYear_khong_nhuan
+
+	# after above, year % 4 == 0, need to check year % 100 != 0
+	addi $t1, $zero, 100
+	div $t0, $t1
+	mfhi $t2 		# year % 100
+	beq $t2, $zero, LeapYear_khong_nhuan
+LeapYear_nhuan:
+	addi $v0, $zero, 1
+	j LeapYear_exit
+LeapYear_khong_nhuan:
+	add $v0, $zero, $zero
+	j LeapYear_exit
+LeapYear_exit:
+	# restore from stack
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	jr $ra
 
 # str "12345" -> int 12345
 # only positive, consider input is correct (only digits)
