@@ -281,30 +281,27 @@ LeapYear:
 	sw $ra, 0($sp)
 
 	jal Year
-	add $t0, $zero, $v0	# $t0 save year
+	add $t0, $zero, $v0			# $t0 save year
 
-	# if year % 400 == 0, nam nhuan
 	addi $t1, $zero, 400
 	div $t0, $t1
-	mfhi $t2 		#  year % 400
-	beq $t2, $zero, LeapYear_nhuan
+	mfhi $t2 				# $t2 = year % 400
+	beq $t2, $zero, LeapYear_nhuan 		# year chia het cho 400
 
-	# if year % 4 != 0, nam khong nhuan
 	addi $t1, $zero, 4
 	div $t0, $t1
-	mfhi $t2 		# year % 4
-	bne $t2, $zero, LeapYear_khong_nhuan
+	mfhi $t2 				# $t2 = year % 4
+	bne $t2, $zero, LeapYear_khong_nhuan 	# year khong chia het cho 4
 
-	# after above, year % 4 == 0, need to check year % 100 != 0
 	addi $t1, $zero, 100
 	div $t0, $t1
-	mfhi $t2 		# year % 100
-	beq $t2, $zero, LeapYear_khong_nhuan
+	mfhi $t2 				# $t2 = year % 100
+	beq $t2, $zero, LeapYear_khong_nhuan 	# year chia het cho 4 va 100
 LeapYear_nhuan:
-	addi $v0, $zero, 1
+	addi $v0, $zero, 1			# $t0 tra ve 1 la nam nhuan
 	j LeapYear_exit
 LeapYear_khong_nhuan:
-	add $v0, $zero, $zero
+	add $v0, $zero, $zero			# $t0 tra ve 0 la nam khnong nhuan
 	j LeapYear_exit
 LeapYear_exit:
 	# restore from stack
