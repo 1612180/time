@@ -318,20 +318,20 @@ LeapYear_exit:
 #	$a1 from
 # 	$a2 to
 atoi:
-	add $v0, $zero, $zero	# $v0 store result
-	add $t0, $a0, $a1	# p = str + from
-	add $t1, $a0, $a2	# str + to
-	addi $t1, $t1, 1	# str + to + 1
+	add $v0, $zero, $zero	# $v0 is result
+	add $t0, $a0, $a1	# $t0 store p, p = str + from
+	add $t1, $a0, $a2	# $t1 = str + to
+	addi $t1, $t1, 1	# $t1 = str + to + 1
 atoi_sum_loop:
 	slt $t2, $t0, $t1	# $t2 = p < str + to + 1
 	beq $t2, $zero, atoi_exit
 	# result = result * 10 + *p - '0'
 	addi $t3, $zero, 10
-	mult $v0, $t3		# result * 10
-	mflo $v0		# get from LO
-	lb $t3, 0($t0)		# get *p
-	addi $t3, $t3, -48	# *p - '0'
-	add $v0, $v0, $t3
+	mult $v0, $t3
+	mflo $v0		# result = result * 10
+	lb $t3, 0($t0)		# $t3 = *p
+	addi $t3, $t3, -48	# $t3 from char to int, $t3 = *p - '0'
+	add $v0, $v0, $t3	# result += *p - '0'
 	addi $t0, $t0, 1	# p += 1
 	j atoi_sum_loop
 atoi_exit:
