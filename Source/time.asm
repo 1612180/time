@@ -407,10 +407,10 @@ check_thang_2_khong_nhuan:
 	beq $t2, $t5, check_hop_le_khong	# neu day = 29
 	j check_hop_le_co
 check_hop_le_co:
-	addi $v0, $zero, 1			# $v0 tra ve 1 nam nhuan
+	addi $v0, $zero, 1			# $v0 tra ve 1 hop le
 	j check_hop_le_exit
 check_hop_le_khong:
-	add $v0, $zero, $zero			# $v0 tra ve 0 nam khong nhuan
+	add $v0, $zero, $zero			# $v0 tra ve 0 khong hop le
 	j check_hop_le_exit
 check_hop_le_exit:
 	# restore from stack
