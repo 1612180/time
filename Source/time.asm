@@ -29,34 +29,34 @@ TIME_2:
         .text
 main:
 	# nhap TIME_1
-        # nhap ngay, save in $s0
-        addi $v0, $zero, 4      # print str
-        la $a0, msg_nhap_ngay
+	# nhap ngay, save in $s0
+        addi $v0, $zero, 4      # syscall print str
+        la $a0, msg_nhap_ngay	# $a0 is str
         syscall
-        addi $v0, $zero, 5      # read int
+        addi $v0, $zero, 5      # syscall read int
         syscall
-        add $s0, $zero, $v0     # $v0 save read int
+        add $s0, $zero, $v0     # $s0 get read int from $v0
 
         # nhap thang, save in $s1
-        addi $v0, $zero, 4
-        la $a0, msg_nhap_thang
+        addi $v0, $zero, 4	# syscall print str
+        la $a0, msg_nhap_thang	# $a0 is str
         syscall
-        addi $v0, $zero, 5
+        addi $v0, $zero, 5	# syscall read int
         syscall
-        add $s1, $zero, $v0
+        add $s1, $zero, $v0	# $s1 get read int from $v0
 
         # nhap nam, save in $s2
-        addi $v0, $zero, 4
-        la $a0, msg_nhap_nam
+        addi $v0, $zero, 4	# syscall print str
+        la $a0, msg_nhap_nam	# $a0 is str
         syscall
-        addi $v0, $zero, 5
+        addi $v0, $zero, 5	# syscall read int
         syscall
-      	add $s2, $zero, $v0
+      	add $s2, $zero, $v0	# $s2 get read int from $v0
 
         # ham Date
-        add $a0, $zero, $s0
-        add $a1, $zero, $s1
-        add $a2, $zero, $s2
+        add $a0, $zero, $s0	# $a0 la ngay
+        add $a1, $zero, $s1	# $a1 la thang
+        add $a2, $zero, $s2	# $a2 la nam
         la $a3, TIME_1
         jal Date
         # print Date: DD/MM/YYYY
@@ -129,55 +129,55 @@ Date:
 	# DAY -> DD
 	addi $t1, $zero, 10
 	div $a0, $t1
-	mflo $t2		# DAY / 10
-	mfhi $t3		# DAY % 10
-	addi $t2, $t2, 48	# 48 is '0'
-	addi $t3, $t3, 48
-	sb $t2, 0($a3)		# str_TIME[0]
-	sb $t3, 1($a3)
+	mflo $t2		# $t2 save DAY / 10
+	mfhi $t3		# $t3 save DAY % 10
+	addi $t2, $t2, 48	# $t2 from int to char, 48 is '0'
+	addi $t3, $t3, 48	# $t3 from int to char
+	sb $t2, 0($a3)		# TIME[0] = $t2
+	sb $t3, 1($a3)		# TIME[1] = $t3
 	addi $t4, $zero, 47	# 47 is '/'
-	sb $t4, 2($a3)
+	sb $t4, 2($a3)		# TIME[2] = '/'
 
 	# MONTH -> MM
 	addi $t1, $zero, 10
 	div $a1, $t1
-	mflo $t2		# MONTH / 10
-	mfhi $t3		# MONTH % 10
-	addi $t2, $t2, 48
-	addi $t3, $t3, 48
-	sb $t2, 3($a3)
-	sb $t3, 4($a3)
-	addi $t4, $zero, 47
-	sb $t4, 5($a3)
+	mflo $t2		# $t2 MONTH / 10
+	mfhi $t3		# $t3 MONTH % 10
+	addi $t2, $t2, 48	# $t2 from int to char
+	addi $t3, $t3, 48	# $t3 from int to char
+	sb $t2, 3($a3)		# TIME[3] = $t2
+	sb $t3, 4($a3)		# TIME[4] = $t3
+	addi $t4, $zero, 47	# 47 is '/'
+	sb $t4, 5($a3)		# TIME[5] = '/'
 
 	# YEAR -> YYYY
 	add $t0, $zero, $a2	# $t0 save YEAR
 	addi $t1, $zero, 1000
 	div $t0, $t1
-	mflo $t2		# YEAR / 1000
-	mfhi $t0		# YEAR % 1000
-	addi $t2, $t2, 48
-	sb $t2, 6($a3)
+	mflo $t2		# $t2 save YEAR / 1000
+	mfhi $t0		# $t0 save YEAR % 1000
+	addi $t2, $t2, 48	# $t2 from int to char
+	sb $t2, 6($a3)		# TIME[6] = $t2
 
 	addi $t1, $zero, 100
 	div $t0, $t1
-	mflo $t2		# (YEAR % 1000) / 100
-	mfhi $t0		# YEAR % 100
-	addi $t2, $t2, 48
-	sb $t2, 7($a3)
+	mflo $t2		# $t2 save (YEAR % 1000) / 100
+	mfhi $t0		# $t0 save YEAR % 100
+	addi $t2, $t2, 48	# $t2 from int to char
+	sb $t2, 7($a3)		# TIME[7] = $t2
 
 	addi $t1, $zero, 10
 	div $t0, $t1
-	mflo $t2		# (YEAR % 100) / 10
-	mfhi $t0		# YEAR % 10
-	addi $t2, $t2, 48
-	addi $t0, $t0, 48
-	sb $t2, 8($a3)
-	sb $t0, 9($a3)
+	mflo $t2		# $t2 save (YEAR % 100) / 10
+	mfhi $t0		# $t0 save YEAR % 10
+	addi $t2, $t2, 48	# $t2 from int to char
+	addi $t0, $t0, 48	# $t0 from int to char
+	sb $t2, 8($a3)		# TIME[8] = $t2
+	sb $t0, 9($a3)		# TIME[9] = $t0
 
 	# exit
-	sb $zero, 10($a3)	# str_TIME[10]= '\0'
-	add $v0, $zero, $a3
+	sb $zero, 10($a3)	# TIME[10]= '\0'
+	add $v0, $zero, $a3	# tra ve $a3 giu dia chi TIME
 	jr $ra
 
 # Ham chuyen doi dinh dang DD/MM/YYYY
