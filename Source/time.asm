@@ -6,6 +6,13 @@
 #       $s1 save MONTH
 #       $s2 save YEAR
 
+# TODO Convert in type B, C
+# TODO int Month(char* TIME)
+# TODO int Year(char* TIME)
+# TODO int LeapYear(char* TIME)
+# TODO int GetTime(char* TIME_1, char* TIME_2)
+# TODO char* Weekday(char* TIME)
+
         .data
 msg_nhap_ngay:
         .asciiz "Nhap ngay DAY: "
@@ -72,6 +79,13 @@ main:
         # print '\n'
         add $a0, $zero, 10
         addi $v0, $zero, 11
+        syscall
+
+        # goi ham Day
+        la $a0, str_TIME
+        jal Day
+        add $a0, $zero, $v0
+        addi $v0, $zero, 1
         syscall
 
         # exit
@@ -172,6 +186,25 @@ Convert_C:
 	j Convert_exit
 Convert_exit:
 	add $v0, $zero, $a0
+	jr $ra
+
+# Ham tra ve ngay trong TIME: DD/MM/YY
+#	$a0 str_TIME
+Day:
+	# save to stack
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+
+	# Day is TIME[0:1]
+	add $a1, $zero, $zero
+	addi $a2, $zero, 1
+	jal atoi
+
+	# $v0 return from atoi is also return in Day
+
+	# restore from stack
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
 	jr $ra
 
 # str "12345" -> int 12345
