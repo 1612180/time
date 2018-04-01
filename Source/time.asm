@@ -7,8 +7,6 @@
 #       $s2 save YEAR
 
 # TODO Convert in type B, C
-# TODO int Month(char* TIME)
-# TODO int Year(char* TIME)
 # TODO int LeapYear(char* TIME)
 # TODO int GetTime(char* TIME_1, char* TIME_2)
 # TODO char* Weekday(char* TIME)
@@ -68,22 +66,8 @@ main:
         addi $v0, $zero, 11
         syscall
 
-        # goi ham Convert
         la $a0, str_TIME
-        addi $a1, $zero, 65
-        jal Convert
-        # print Convert
-        add $a0, $zero, $v0
-        addi $v0, $zero, 4
-        syscall
-        # print '\n'
-        add $a0, $zero, 10
-        addi $v0, $zero, 11
-        syscall
-
-        # goi ham Day
-        la $a0, str_TIME
-        jal Day
+        jal Year
         add $a0, $zero, $v0
         addi $v0, $zero, 1
         syscall
@@ -188,7 +172,7 @@ Convert_exit:
 	add $v0, $zero, $a0
 	jr $ra
 
-# Ham tra ve ngay trong TIME: DD/MM/YY
+# Ham tra ve ngay trong TIME: DD/MM/YYYY
 #	$a0 str_TIME
 Day:
 	# save to stack
@@ -206,6 +190,45 @@ Day:
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
 	jr $ra
+
+# Ham tra ve thang trong TIME: DD/MM/YYYY
+#	$a0 str_TIME
+Month:
+	# save to stack
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+
+	# Month is TIME[3:4]
+	addi $a1, $zero, 3
+	addi $a2, $zero, 4
+	jal atoi
+
+	# $v0 return from atoi is also return in Month
+
+	# restore from stack
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	jr $ra
+
+# Ham tra ve nam trong TIME: DD/MM/YYYY
+#	$a0 str_TIME
+Year:
+	# save to stack
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+
+	# Year is TIME[6:9]
+	addi $a1, $zero, 6
+	addi $a2, $zero, 9
+	jal atoi
+
+	# $v0 return from atoi is also return in Year
+
+	# restore from stack
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	jr $ra
+
 
 # str "12345" -> int 12345
 # only positive, consider input is correct (only digits)
