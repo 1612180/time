@@ -113,14 +113,14 @@ Date:
 	addi $t1, $zero, 100
 	div $t0, $t1
 	mflo $t2		# (YEAR % 1000) / 100
-	mfhi $t0		# (YEAR % 1000) % 100
+	mfhi $t0		# YEAR % 100
 	addi $t2, $t2, 48
 	sb $t2, 7($a3)
 
 	addi $t1, $zero, 10
 	div $t0, $t1
-	mflo $t2		# ((YEAR % 1000) % 100) / 10
-	mfhi $t0		# ((YEAR % 1000) % 100) % 10
+	mflo $t2		# (YEAR % 100) / 10
+	mfhi $t0		# YEAR % 10
 	addi $t2, $t2, 48
 	addi $t0, $t0, 48
 	sb $t2, 8($a3)
