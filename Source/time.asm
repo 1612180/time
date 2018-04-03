@@ -6,6 +6,8 @@
 # TODO Convert in type B, C
 # TODO char* Weekday(char* TIME)
 # TODO dem so ngay giua hai nam
+# TODO 2 nam nhuan gan nhat
+# TODO main
 
         .data
 msg_nhap_ngay:
@@ -20,16 +22,49 @@ TIME_2:
 	.space 1024
 str_temp:
 	.space 1024
-yeu_cau:
+yeu_cau_chon:
 	.asciiz "----Ban hay chon 1 trong cac thao tac duoi day----\n"
+yeu_cau_1:
+	.asciiz "1. Xuat chuoi TIME theo dinh dang DD/MM/YYYY\n"
+yeu_cau_2:
+	.asciiz "2. Xuat chuoi TIME thanh mot trong cac dinh dang sau\n   A. MM/DD/YYYY\n   B. Month DD, YYYY\n   C. DD Month, YYYY\n"
+yeu_cau_3:
+	.asciiz "3. Cho biet ngay vua nhap la thu may trong tuan\n"
+yeu_cau_4:
+	.asciiz "4. Kiem tra nam trong chuoi TIME co phai la nam nhuan khong\n"
+yeu_cau_5:
+	.asciiz "5. Cho biet khoang thoi gian giua chuoi TIME_1 va TIME_2\n"
+yeu_cau_6:
+	.asciiz "6. Cho biet 2 nam nhuan gan nhat voi nam trong chuoi TIME\n"
+yeu_cau_7:
+	.ascii "7. Kiem tra bo du lieu dau vao khi nhap, neu du lieu khong hop le thi yeu cau nguoi dung nhap lai\n"
 
         .text
 main:
-	addi $a0, $zero, 8
-	addi $a1, $zero, 3
-	jal demSoNamNhuan
-	add $a0, $zero, $v0
-	addi $v0, $zero, 1
+	# In ra toan bo yeu cau
+	la $a0, yeu_cau_chon
+	addi $v0, $zero, 4
+	syscall
+	la $a0, yeu_cau_1
+	addi $v0, $zero, 4
+	syscall
+	la $a0, yeu_cau_2
+	addi $v0, $zero, 4
+	syscall
+	la $a0, yeu_cau_3
+	addi $v0, $zero, 4
+	syscall
+	la $a0, yeu_cau_4
+	addi $v0, $zero, 4
+	syscall
+	la $a0, yeu_cau_5
+	addi $v0, $zero, 4
+	syscall
+	la $a0, yeu_cau_6
+	addi $v0, $zero, 4
+	syscall
+	la $a0, yeu_cau_7
+	addi $v0, $zero, 4
 	syscall
 
         # exit
