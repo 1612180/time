@@ -40,7 +40,6 @@ main:
 	add $a0, $zero, $s1
 	addi $v0, $zero, 1
 	syscall
-
         # exit
         addi $v0, $zero, 10
         syscall
@@ -419,6 +418,9 @@ nhap_time:
 	sw $a1, 20($sp)
 
 	# Nhap chuoi ngay
+	addi $v0, $zero, 4	# syscall print string
+	la $a0, msg_nhap_ngay
+	syscall
 	addi $v0, $zero, 8	# syscall read string
 	lw $a0, 20($sp)		# $a0 save str_temp
 	addi $a1, $zero, 1024	# max size of str_temp
@@ -431,6 +433,9 @@ nhap_time:
 	sw $v0, 16($sp)		# luu ngay dang int vao stack
 
 	# Nhap chuoi thang
+	addi $v0, $zero, 4	# syscall print string
+	la $a0, msg_nhap_thang
+	syscall
 	addi $v0, $zero, 8	# syscall read string
 	lw $a0, 20($sp)		# $a0 save str_temp
 	addi $a1, $zero, 1024 	# max size of str_temp
@@ -443,6 +448,9 @@ nhap_time:
 	sw $v0, 12($sp) 	# luu thang dang int vao stack
 
 	# Nhap chuoi nam
+	addi $v0, $zero, 4	# syscall print string
+	la $a0, msg_nhap_nam
+	syscall
 	addi $v0, $zero, 8 	# syscall read string
 	lw $a0, 20($sp) 	# $a0 save str_temp
 	addi $a1, $zero, 1024 	# max size of str_temp
@@ -501,4 +509,34 @@ is_only_digits_loop:
 is_only_digits_non:
 	add $v0, $zero, $zero	# $v0 = 0, khong hop le
 is_only_digits_exit:
+	jr $ra
+
+# Ham dem so nam nhuan tu nam 0 den nam hien tai theo cong thuc
+# Neu thang < 3, nam tru di 1 don vi
+# Ket qua = nam / 4 - nam / 100 + nam / 400
+# 	$a0 nam hien tai
+#	$a1 thang hien tai
+# 	$v0 so nam nhuan 0 -> year
+demSoNamNhuan:
+	add $t0, $zero, $a0 		# $t0 = nam
+	slti $t2, $a1, 3
+	beq $t2, $zero, dem_skip 	# neu thang >= 3
+	addi $t0, $t0, -1		# nam -= 1
+dem_skip:
+	add $v0, $v0, $t0 		# Ket qua = nam
+	addi $t7, $zero, 4 		# So chia $t7 = 4
+	div $v0, $t7 			# nam / 4
+	mflo $v0   			# $v0 = nam / 4
+
+	add $t2, $zero, $t0 		# $t2 = nam
+	addi $t7, $zero, 100 		# So chia $t7 = 100
+	div $t2, $t7 			# nam / 100
+	mflo $t2 			# $t2 = nam / 100
+	sub $v0, $v0, $t2 		# $v0 = nam / 4 - nam / 100
+
+	add $t2, $zero, $t0 		# $t2 = nam
+	addi $t7, $zero, 400 		# So chia t7 = 400
+	div $t2, $t7 			# nam / 400
+	mflo $t2 			# $t2 = nam / 400
+	add $v0, $v0, $t2 		# $v0 = nam / 4 - nam / 100 + nam / 400
 	jr $ra
