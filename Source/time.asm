@@ -25,96 +25,20 @@ TIME_1:
         .space 1024
 TIME_2:
 	.space 1024
+str_temp:
+	.space 1024
 
         .text
 main:
-	# nhap TIME_1
-	# nhap ngay, save in $s0
-        addi $v0, $zero, 4      # syscall print str
-        la $a0, msg_nhap_ngay	# $a0 is str
-        syscall
-        addi $v0, $zero, 5      # syscall read int
-        syscall
-        add $s0, $zero, $v0     # $s0 get read int from $v0
-
-        # nhap thang, save in $s1
-        addi $v0, $zero, 4	# syscall print str
-        la $a0, msg_nhap_thang	# $a0 is str
-        syscall
-        addi $v0, $zero, 5	# syscall read int
-        syscall
-        add $s1, $zero, $v0	# $s1 get read int from $v0
-
-        # nhap nam, save in $s2
-        addi $v0, $zero, 4	# syscall print str
-        la $a0, msg_nhap_nam	# $a0 is str
-        syscall
-        addi $v0, $zero, 5	# syscall read int
-        syscall
-      	add $s2, $zero, $v0	# $s2 get read int from $v0
-
-        # ham Date
-        add $a0, $zero, $s0	# $a0 la ngay
-        add $a1, $zero, $s1	# $a1 la thang
-        add $a2, $zero, $s2	# $a2 la nam
-        la $a3, TIME_1
-        jal Date
-        # print Date: DD/MM/YYYY
-        add $a0, $zero, $v0
-        addi $v0, $zero, 4
-        syscall
-        # print '\n'
-        add $a0, $zero, 10
-        addi $v0, $zero, 11
-        syscall
-
-	# nhap TIME_2
-        # nhap ngay, save in $s3
-        addi $v0, $zero, 4      # print str
-        la $a0, msg_nhap_ngay
-        syscall
-        addi $v0, $zero, 5      # read int
-        syscall
-        add $s3, $zero, $v0     # $v0 save read int
-
-        # nhap thang, save in $s4
-        addi $v0, $zero, 4
-        la $a0, msg_nhap_thang
-        syscall
-        addi $v0, $zero, 5
-        syscall
-        add $s4, $zero, $v0
-
-        # nhap nam, save in $s5
-        addi $v0, $zero, 4
-        la $a0, msg_nhap_nam
-        syscall
-        addi $v0, $zero, 5
-        syscall
-      	add $s5, $zero, $v0
-
-        # ham Date
-        add $a0, $zero, $s3
-        add $a1, $zero, $s4
-        add $a2, $zero, $s5
-        la $a3, TIME_2
-        jal Date
-        # print Date: DD/MM/YYYY
-        add $a0, $zero, $v0
-        addi $v0, $zero, 4
-        syscall
-        # print '\n'
-        add $a0, $zero, 10
-        addi $v0, $zero, 11
-        syscall
-
-        # GetTime
-        la $a0, TIME_1
-        la $a1, TIME_2
-        jal GetTime
-        add $a0, $zero, $v0
-        addi $v0, $zero, 1
-        syscall
+	# test atoi_whole
+	addi $v0, $zero, 8
+	la $a0, str_temp
+	addi $a1, $zero, 1024
+	syscall
+	jal is_only_digits
+	add $a0, $zero, $v0
+	addi $v0, $zero, 1
+	syscall
 
         # exit
         addi $v0, $zero, 10
@@ -314,24 +238,46 @@ LeapYear_exit:
 #	$a0 str
 #	$a1 from
 # 	$a2 to
+#	$v0 int
 atoi:
 	add $v0, $zero, $zero	# $v0 is result
 	add $t0, $a0, $a1	# $t0 store p, p = str + from
 	add $t1, $a0, $a2	# $t1 = str + to
 	addi $t1, $t1, 1	# $t1 = str + to + 1
 atoi_sum_loop:
-	slt $t2, $t0, $t1	# $t2 = p < str + to + 1
-	beq $t2, $zero, atoi_exit
+	slt $t2, $t0, $t1
+	beq $t2, $zero, atoi_exit	# neu p <= str + to
 	# result = result * 10 + *p - '0'
 	addi $t3, $zero, 10
 	mult $v0, $t3
 	mflo $v0		# result = result * 10
 	lb $t3, 0($t0)		# $t3 = *p
-	addi $t3, $t3, -48	# $t3 from char to int, $t3 = *p - '0'
+	addi $t3, $t3, -48	# from char to int, *p = *p - '0'
 	add $v0, $v0, $t3	# result += *p - '0'
 	addi $t0, $t0, 1	# p += 1
 	j atoi_sum_loop
 atoi_exit:
+	jr $ra
+
+# atoi cho truong hop nguyen chuoi (doc den '\0')
+# 	$a0 str
+# 	$v0 int
+atoi_whole:
+	add $v0, $zero, $zero	# $v0 is result
+	add $t0, $zero, $a0	# $t0 is pointer p, p = str
+atoi_whole_loop:
+	lb $t1, 0($t0)				# $t1 = *p
+	beq $t1, $zero, atoi_whole_exit		# neu *p == '\0'
+	# result = result * 10 + *p - '0'
+	addi $t2, $zero, 10
+	beq $t1, $t2, atoi_whole_exit		# neu *p == '\n'
+	mult $v0, $t2
+	mflo $v0		# result = result * 10
+	addi $t1, $t1, -48	# from char to int, *p = *p -'0'
+	add $v0, $v0, $t1	# result += *p - '0'
+	add $t0, $t0, 1		# p += 1
+	j atoi_whole_loop
+atoi_whole_exit:
 	jr $ra
 
 # Ham kiem tra tinh hop le cua ngay, thang, nam vua nhap
@@ -448,4 +394,67 @@ GetTime_exit:
 	lw $a0, 8($sp)
 	lw $a1, 4($sp)
 	addi $sp, $sp, 16
+	jr $ra
+
+# Ham nhap thoi gian theo ngay, thang, nam
+# Nhap bang string, sau do kiem tra hop le:
+#	- only digits (syntax, "ab/2/1000" is non-valid)
+#	- valid date (logic, "30/2/2000" is non-valid)
+#	$a0 TIME 		luu DD/MM/YYYY
+#	$a1 str_temp		bien tam
+# 	$v0 TIME 		tra ve vi tri TIME
+#	$v1 tinh hop le 	1 - hop le, 0 - khong hop le
+nhap_time:
+	# save to stack
+	addi $sp, $sp, -32
+	sw $ra, 28($sp)
+	sw $a0, 24($sp)
+	sw $a1, 20($sp)
+
+	# Nhap ngay bang read string
+	addi $v0, $zero, 8	# syscall read string
+	add $a0, $zero, $a1	# $a0 save str_temp
+	addi $a1, $zero, 1024	# max size of str_temp
+	syscall
+	jal is_only_digits	# kiem tra hop le syntax cua ngay
+	add $t0, $zero, $v0	# $t0 luu gia tri hop le cua ngay
+	beq $t0, $zero, nhap_time_non_valid
+	# Chuyen ngay string sang int
+	lw $a0, 24($sp)		# $a0 save str_temp
+	jal atoi_whole
+	sw $v0, 16($sp)		# luu ngay dang int vao stack
+
+	addi $v1, $zero, 1	# $v1 = 1, hop le
+nhap_time_non_valid:
+	add $v1, $zero, $zero	# $v1 = 0, khong hop le
+nhap_time_exit:
+	# restore from stack
+	lw $ra, 28($sp)
+	lw $a0, 24($sp)
+	lw $a1, 20($sp)
+	addi $sp, $sp, 32
+	add $v0, $zero, $a0	# $v0 tra ve dia chi TIME
+	jr $ra
+
+# Ham kiem tra tinh hop le cua chuoi ngay(thang, nam) nhap vao
+# Hop le nghia la chuoi chi chua digits [0-9]
+#	$a0 string
+#	$v0 tinh hop le 	1 - hop le, 0 - khong hop le
+is_only_digits:
+	add $t0, $zero, $a0	# $t0 la con tro p, p = string
+	addi $v0, $zero, 1	# $v0 = 1, mac dinh la hop le
+is_only_digits_loop:
+	lb $t1, 0($t0)				# $t1 = *p
+	beq $t1, $zero, is_only_digits_exit 	# neu *p == '\0'
+	addi $t2, $zero, 10
+	beq $t1, $t2, is_only_digits_exit 	# neu *p == '\n'
+	slt $t2, $t1, 48			# 48 la '0'
+	bne $t2, $zero, is_only_digits_non	# neu *p < '0'
+	slt $t2, $t1, 58			# 57 la '9'
+	beq $t2, $zero, is_only_digits_non	# neu *p > '9'
+	addi $t0, $t0, 1			# p += 1
+	j is_only_digits_loop
+is_only_digits_non:
+	add $v0, $zero, $zero	# $v0 = 0, khong hop le
+is_only_digits_exit:
 	jr $ra
