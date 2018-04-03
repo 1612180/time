@@ -20,26 +20,18 @@ TIME_2:
 	.space 1024
 str_temp:
 	.space 1024
+yeu_cau:
+	.asciiz "----Ban hay chon 1 trong cac thao tac duoi day----\n"
 
         .text
 main:
-	# test nhap
-	la $a0, TIME_1
-	la $a1, str_temp
-	jal nhap_time
-
-	add $s0, $zero, $v0
-	add $s1, $zero, $v1
-
-	# print time
-	add $a0, $zero, $s0
-	addi $v0, $zero, 4
-	syscall
-
-	# print valid
-	add $a0, $zero, $s1
+	addi $a0, $zero, 8
+	addi $a1, $zero, 3
+	jal demSoNamNhuan
+	add $a0, $zero, $v0
 	addi $v0, $zero, 1
 	syscall
+
         # exit
         addi $v0, $zero, 10
         syscall
@@ -523,20 +515,20 @@ demSoNamNhuan:
 	beq $t2, $zero, dem_skip 	# neu thang >= 3
 	addi $t0, $t0, -1		# nam -= 1
 dem_skip:
-	add $v0, $v0, $t0 		# Ket qua = nam
-	addi $t7, $zero, 4 		# So chia $t7 = 4
-	div $v0, $t7 			# nam / 4
+	add $t2, $zero, $t0 		# $t2 = nam
+	addi $t3, $zero, 4 		# So chia $t3 = 4
+	div $t2, $t3			# nam / 4
 	mflo $v0   			# $v0 = nam / 4
 
 	add $t2, $zero, $t0 		# $t2 = nam
-	addi $t7, $zero, 100 		# So chia $t7 = 100
-	div $t2, $t7 			# nam / 100
+	addi $t3, $zero, 100 		# So chia $t3 = 100
+	div $t2, $t3 			# nam / 100
 	mflo $t2 			# $t2 = nam / 100
 	sub $v0, $v0, $t2 		# $v0 = nam / 4 - nam / 100
 
 	add $t2, $zero, $t0 		# $t2 = nam
-	addi $t7, $zero, 400 		# So chia t7 = 400
-	div $t2, $t7 			# nam / 400
+	addi $t3, $zero, 400 		# So chia t3 = 400
+	div $t2, $t3 			# nam / 400
 	mflo $t2 			# $t2 = nam / 400
 	add $v0, $v0, $t2 		# $v0 = nam / 4 - nam / 100 + nam / 400
 	jr $ra
