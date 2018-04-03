@@ -2,14 +2,6 @@
 # 1612180 - Nguyen Tran Hau
 # 1612628 - Nguyen Duy Thanh
 # 1612403 - Tran Hoai Nam
-#	TIME_1
-#       $s0 save DAY
-#       $s1 save MONTH
-#       $s2 save YEAR
-#	TIME_2
-#       $s3 save DAY
-#       $s4 save MONTH
-#       $s5 save YEAR
 
 # TODO Convert in type B, C
 # TODO char* Weekday(char* TIME)
@@ -30,13 +22,21 @@ str_temp:
 
         .text
 main:
-	# test atoi_whole
-	addi $v0, $zero, 8
-	la $a0, str_temp
-	addi $a1, $zero, 1024
+	# test nhap
+	la $a0, TIME_1
+	la $a1, str_temp
+	jal nhap_time
+
+	add $s0, $zero, $v0
+	add $s1, $zero, $v1
+
+	# print time
+	add $a0, $zero, $s0
+	addi $v0, $zero, 4
 	syscall
-	jal is_only_digits
-	add $a0, $zero, $v0
+
+	# print valid
+	add $a0, $zero, $s1
 	addi $v0, $zero, 1
 	syscall
 
@@ -282,6 +282,7 @@ atoi_whole_exit:
 
 # Ham kiem tra tinh hop le cua ngay, thang, nam vua nhap
 # 	$a0 TIME
+# 	$v0 tinh hop le 	1 - hop le, 0 - khong hop le
 check_hop_le:
 	# save to stack
 	addi $sp, $sp, -12
@@ -353,10 +354,10 @@ check_thang_2_khong_nhuan:
 	beq $t2, $t5, check_hop_le_khong	# neu day = 29
 	j check_hop_le_co
 check_hop_le_co:
-	addi $v0, $zero, 1			# $v0 tra ve 1 hop le
+	addi $v0, $zero, 1			# $v0 = 1, hop le
 	j check_hop_le_exit
 check_hop_le_khong:
-	add $v0, $zero, $zero			# $v0 tra ve 0 khong hop le
+	add $v0, $zero, $zero			# $v0 = 0, khong hop le
 	j check_hop_le_exit
 check_hop_le_exit:
 	# restore from stack
@@ -411,20 +412,56 @@ nhap_time:
 	sw $a0, 24($sp)
 	sw $a1, 20($sp)
 
-	# Nhap ngay bang read string
+	# Nhap chuoi ngay
 	addi $v0, $zero, 8	# syscall read string
-	add $a0, $zero, $a1	# $a0 save str_temp
+	lw $a0, 20($sp)		# $a0 save str_temp
 	addi $a1, $zero, 1024	# max size of str_temp
 	syscall
-	jal is_only_digits	# kiem tra hop le syntax cua ngay
-	add $t0, $zero, $v0	# $t0 luu gia tri hop le cua ngay
-	beq $t0, $zero, nhap_time_non_valid
-	# Chuyen ngay string sang int
-	lw $a0, 24($sp)		# $a0 save str_temp
+	jal is_only_digits	# kiem tra hop le syntax ngay
+	beq $v0, $zero, nhap_time_non_valid	# neu chuoi ngay khong hop le
+	# Chuyen ngay string -> int
+	lw $a0, 20($sp)		# $a0 save str_temp
 	jal atoi_whole
 	sw $v0, 16($sp)		# luu ngay dang int vao stack
 
+	# Nhap chuoi thang
+	addi $v0, $zero, 8	# syscall read string
+	lw $a0, 20($sp)		# $a0 save str_temp
+	addi $a1, $zero, 1024 	# max size of str_temp
+	syscall
+	jal is_only_digits 	# kiem tra hop le syntax thang
+	beq $v0, $zero, nhap_time_non_valid 	# neu chuoi thang khong hop le
+	# Chuyen thang string -> int
+	lw $a0, 20($sp)		# $a0 save str_temp
+	jal atoi_whole
+	sw $v0, 12($sp) 	# luu thang dang int vao stack
+
+	# Nhap chuoi nam
+	addi $v0, $zero, 8 	# syscall read string
+	lw $a0, 20($sp) 	# $a0 save str_temp
+	addi $a1, $zero, 1024 	# max size of str_temp
+	syscall
+	jal is_only_digits 	# kiem tra hop le syntax nam
+	beq $v0, $zero, nhap_time_non_valid 	# neu chuoi nam khong hop le
+	# Chuyen nam string -> int
+	lw $a0, 20($sp) 	# $a0 save str_temp
+	jal atoi_whole
+	sw $v0, 8($sp) 		# luu nam dang int vao stack
+
+	# Nhap vap TIME theo chuan DD/MM/YYYY
+	lw $a0, 16($sp)		# ngay dang int
+	lw $a1, 12($sp)		# thang dang int
+	lw $a2, 8($sp) 		# nam dang int
+	lw $a3, 24($sp) 	# dia chi luu TIME
+	jal Date
+
+	# Kiem tra TIME hop le logic
+	lw $a0, 24($sp)
+	jal check_hop_le
+	beq $v0, $zero, nhap_time_non_valid
+
 	addi $v1, $zero, 1	# $v1 = 1, hop le
+	j nhap_time_exit
 nhap_time_non_valid:
 	add $v1, $zero, $zero	# $v1 = 0, khong hop le
 nhap_time_exit:
@@ -433,6 +470,7 @@ nhap_time_exit:
 	lw $a0, 24($sp)
 	lw $a1, 20($sp)
 	addi $sp, $sp, 32
+
 	add $v0, $zero, $a0	# $v0 tra ve dia chi TIME
 	jr $ra
 
