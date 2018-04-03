@@ -5,6 +5,7 @@
 
 # TODO Convert in type B, C
 # TODO char* Weekday(char* TIME)
+# TODO dem so ngay giua hai nam
 
         .data
 msg_nhap_ngay:
@@ -49,6 +50,7 @@ main:
 #       $a1 MONTH
 #       $a2 YEAR
 #       $a3 TIME
+#	$v0 TIME dang DD/MM/YYYY
 Date:
 	# DAY -> DD
 	addi $t1, $zero, 10
@@ -142,6 +144,7 @@ Convert_exit:
 
 # Ham tra ve ngay trong TIME: DD/MM/YYYY
 #	$a0 TIME
+#	$v0 day in TIME
 Day:
 	# save to stack
 	addi $sp, $sp, -4
@@ -161,6 +164,7 @@ Day:
 
 # Ham tra ve thang trong TIME: DD/MM/YYYY
 #	$a0 TIME
+# 	$v0 month in TIME
 Month:
 	# save to stack
 	addi $sp, $sp, -4
@@ -180,6 +184,7 @@ Month:
 
 # Ham tra ve nam trong TIME: DD/MM/YYYY
 #	$a0 TIME
+# 	$v0 year in TIME
 Year:
 	# save to stack
 	addi $sp, $sp, -4
@@ -199,6 +204,7 @@ Year:
 
 # Ham kiem tra nam nhuan
 #	$a0 TIME
+# 	$v0 tra ve 	1 - nam nhuan, 0 - khong phai
 LeapYear:
 	# save to stack
 	addi $sp, $sp, -4
