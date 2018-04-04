@@ -37,7 +37,7 @@ yeu_cau_5:
 yeu_cau_6:
 	.asciiz "6. Cho biet 2 nam nhuan gan nhat voi nam trong chuoi TIME\n"
 yeu_cau_7:
-	.ascii "7. Kiem tra bo du lieu dau vao khi nhap, neu du lieu khong hop le thi yeu cau nguoi dung nhap lai\n"
+	.asciiz "7. Kiem tra bo du lieu dau vao khi nhap, neu du lieu khong hop le thi yeu cau nguoi dung nhap lai\n"
 
         .text
 main:
@@ -566,4 +566,27 @@ dem_skip:
 	div $t2, $t3 			# nam / 400
 	mflo $t2 			# $t2 = nam / 400
 	add $v0, $v0, $t2 		# $v0 = nam / 4 - nam / 100 + nam / 400
+	jr $ra
+
+# Ham copy string y -> string x
+# 	$a0: string x
+#	$a1: string y
+strcpy:
+	# save to stack
+	addi $sp, $sp, -4
+	sw $s0, 0($sp)
+
+	add $s0, $zero, $zero 		# i = 0
+strcpy_loop:
+	add $t0, $s0, $a1		# $t0 = &y[i]
+	lb $t1, 0($t0) 			# $t1 = y[i]
+	add $t2, $s0, $a0 		# $t2 = &x[i]
+	sb $t1, 0($t2) 			# x[i] = y[i]
+	beq $t1, $zero, strcpy_exit	# Neu x[i] == '\0'
+	addi $s0, $s0, 1		# i += 1
+	j strcpy_loop
+strcpy_exit:
+	# restore from stack
+	lw $s0, 0($sp)
+	addi $sp, $sp, 4
 	jr $ra
