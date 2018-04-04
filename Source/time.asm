@@ -573,8 +573,11 @@ dem_skip:
 #	$a1: string y
 strcpy:
 	# save to stack
-	addi $sp, $sp, -4
+	addi $sp, $sp, -16
 	sw $s0, 0($sp)
+	sw $t0, 4($sp)
+	sw $t1, 8($sp)
+	sw $t2, 12($sp)
 
 	add $s0, $zero, $zero 		# i = 0
 strcpy_loop:
@@ -588,5 +591,48 @@ strcpy_loop:
 strcpy_exit:
 	# restore from stack
 	lw $s0, 0($sp)
-	addi $sp, $sp, 4
+	lw $t0, 4($sp)
+	lw $t1, 8($sp)
+	lw $t2, 12($sp)
+	addi $sp,$sp,16
+	jr $ra
+
+# Ham noi y vao x
+# x la "aa", y la "b" ket qua x la "aab"
+# 	$a0 string x
+#	$a1 string y
+strcat:
+	# save to stack
+	addi $sp, $sp,-20
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $t3, 8($sp)
+	sw $t4, 12($sp)
+	sw $t5, 16($sp)
+
+	add $s0, $zero, $zero		# $s0 la i = 0
+	add $s1, $zero, $zero 		# $s1 la j = 0
+strcat_findEndLoop:
+	add $t3, $a0, $s0
+	lb $t4, 0($t3) 			# $t4 = x[i]
+	beq $t4, $zero, appendLoop	# neu x[i] == '\0'
+	addi $s0, $s0, 1  		# i += 1
+	j strcat_findEndLoop
+appendLoop:
+	add $t4, $a1, $s1 		# $t4 = &y[j]
+	lb $t5, 0($t4) 			# $t5 = y[j]
+	add $t3, $a0, $s0 		# $t3 = &x[i]
+	sb $t5, 0($t3) 			# x[i] = y[j]
+	beq $t5, $zero, strcat_exit	# neu x[i] == '\0'
+	addi $s0, $s0, 1		# i += 1
+	addi $s1, $s1, 1		# j += 1
+	j appendLoop
+strcat_exit:
+	# restore from stack
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $t3, 8($sp)
+	lw $t4, 12($sp)
+	lw $t5, 16($sp)
+	addi $sp, $sp, 20
 	jr $ra
