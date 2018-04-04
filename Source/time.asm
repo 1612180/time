@@ -100,7 +100,7 @@ main:
 	jal nhap_time
 
 	la $a0 ,TIME_1
-	addi $a1, $zero, 66
+	addi $a1, $zero, 67
 	jal Convert
 
 	la $a0, TIME_1
@@ -201,15 +201,131 @@ Convert_B:
 	# DD/MM/YYYY -> Month DD, YYYY
 	# save to stack
 	addi $sp, $sp, -32
-	sw $a0, 28($sp)
+	sw $ra, 28($sp)
+	sw $a0, 24($sp)
+	sw $a1, 20($sp)
+
+	# Month 1 -> January
+	jal Month
+	add $a0, $zero, $v0	# $a0 = month (int)
+	jal Month_in_String
+	sw $v0, 16($sp)		# save month (string)
+
+	lw $a0, 24($sp)		# $a0 = TIME
+
+	# Copy " DD, " from TIME[0-1] to TEMP_1
+	la $t0, TEMP_1
+	addi $t1, $zero, 32	# 32 is ' '
+	sb $t1, 0($t0)		# TEMP_1[0] = ' '
+
+	lb $t1, 0($a0)		# D1 = TIME[0]
+	sb $t1, 1($t0)		# TEMP_1[1] = D1
+	lb $t1, 1($a0)		# D2 = TIME[1]
+	sb $t1, 2($t0)		# TEMP_1[2] = D2
+
+	addi $t1, $zero, 44	# 44 is ','
+	sb $t1, 3($t0)		# TEMP_1[3] = ','
+	addi $t1, $zero, 32	# 32 is ' '
+	sb $t1, 4($t0)		# TEMP_1[4] = ' '
+	sb $zero, 5($t0)	# TEMP_1[5] = '\0'
+	sw $t0, 12($sp)		# save TEMP_1
+
+	# Copy "YYYY" from TIME[6:9] to TEMP_2
+	la $t0, TEMP_2
+	lb $t1, 6($a0) 		# Y1 = TIME[6]
+	sb $t1, 0($t0)		# TEMP_2[0] = Y1
+	lb $t1, 7($a0) 		# Y2 = TIME[7]
+	sb $t1, 1($t0)		# TEMP_2[1] = Y2
+	lb $t1, 8($a0) 		# Y3 = TIME[8]
+	sb $t1, 2($t0)		# TEMP_2[2] = Y3
+	lb $t1, 9($a0) 		# Y4 = TIME[9]
+	sb $t1, 3($t0)		# TEMP_2[3] = Y4
+	sb $zero, 4($t0)	# TIME_2[4] = '\0'
+	sw $t0, 8($sp) 		# save TEMP_2
+
+	# Copy month (string) to TIME
+	lw $a1, 16($sp)		# $a1 = month (string)
+	jal strcpy
+
+	# Noi " DD, " luu trong TEMP_1 vao TIME
+	lw $a1, 12($sp)		# $a1 = TEMP_1
+	jal strcat
+
+	# Noi "YYYY" luu trong TEMP_2 vao TIME
+	lw $a1, 8($sp)		# $a1 = TEMP_2
+	jal strcat
 
 	# restore from stack
-	lw $a0, 28($sp)
+	lw $ra, 28($sp)
+	lw $a0, 24($sp)
+	lw $a1, 20($sp)
 	addi $sp, $sp, 32
 
 	j Convert_exit
 Convert_C:
 	# DD/MM/YYYY -> DD Month, YYYY
+	# save to stack
+	addi $sp, $sp, -32
+	sw $ra, 28($sp)
+	sw $a0, 24($sp)
+	sw $a1, 20($sp)
+
+	# Month 1 -> January
+	jal Month
+	add $a0, $zero, $v0	# $a0 = month (int)
+	jal Month_in_String
+	sw $v0, 16($sp)		# save month (string)
+
+	lw $a0, 24($sp)		# $a0 = TIME
+
+	# Copy "DD " from TIME[0-1] to TEMP_1
+	la $t0, TEMP_1
+	lb $t1, 0($a0)		# D1 = TIME[0]
+	sb $t1, 0($t0)		# TEMP_1[0] = D1
+	lb $t1, 1($a0)		# D2 = TIME[1]
+	sb $t1, 1($t0)		# TEMP_1[1] = D2
+
+	addi $t1, $zero, 32	# 32 is ' '
+	sb $t1, 2($t0)		# TEMP_1[2] = ' '
+	sb $zero, 3($t0)	# TEMP_1[3] = '\0'
+	sw $t0, 12($sp)		# save TEMP_1
+
+	# Copy ", YYYY" from TIME[6:9] to TEMP_2
+	la $t0, TEMP_2
+	addi $t1, $zero, 44	# 44 is ','
+	sb $t1, 0($t0)		# TEMP_2[0] = ','
+	addi $t1, $zero, 32	# 32 is ' '
+	sb $t1, 1($t0)		# TEMP_2[1] = ' '
+
+	lb $t1, 6($a0) 		# Y1 = TIME[6]
+	sb $t1, 2($t0)		# TEMP_2[2] = Y1
+	lb $t1, 7($a0) 		# Y2 = TIME[7]
+	sb $t1, 3($t0)		# TEMP_2[3] = Y2
+	lb $t1, 8($a0) 		# Y3 = TIME[8]
+	sb $t1, 4($t0)		# TEMP_2[4] = Y3
+	lb $t1, 9($a0) 		# Y4 = TIME[9]
+	sb $t1, 5($t0)		# TEMP_2[5] = Y4
+	sb $zero, 6($t0)	# TIME_2[6] = '\0'
+	sw $t0, 8($sp) 		# save TEMP_2
+
+	# Copy "DD " luu trong TEMP_1 vao TIME
+	lw $a1, 12($sp)		# $a1 = TEMP_1
+	jal strcpy
+
+	# Noi month (string) vao TIME
+	lw $a1, 16($sp)		# $a1 = month (string)
+	jal strcat
+
+	# Noi ", YYYY" luu trong TEMP_2 vao TIME
+	lw $a1, 8($sp)		# $a1 = TEMP_2
+	jal strcat
+
+	# restore from stack
+	lw $ra, 28($sp)
+	lw $a0, 24($sp)
+	lw $a1, 20($sp)
+	addi $sp, $sp, 32
+
 	j Convert_exit
 Convert_exit:
 	add $v0, $zero, $a0	# tra ve $a0 giu dia chi TIME
@@ -675,7 +791,6 @@ strcat_exit:
 # Ham tra ve ten thang trong nam
 #	$a0 month (integer)
 # 	$v0 month (string)
-#	$v1 length month (string)
 Month_in_String:
 	slti $t0, $a0, 2 	# if month < 2 => month == 1
 	bne $t0, $zero, Jan 	# jump to January
@@ -713,50 +828,38 @@ Month_in_String:
 	j Dec 			# jump to December
 Jan:
 	la $v0, Month_1
-	addi $v1, $zero, 7
 	j Month_in_Year_exit
 Feb:
 	la $v0, Month_2
-	addi $v1, $zero, 8
 	j Month_in_Year_exit
 Mar:
 	la $v0, Month_3
-	addi $v1, $zero, 5
 	j Month_in_Year_exit
 Apr:
 	la $v0, Month_4
-	addi $v1, $zero, 5
 	j Month_in_Year_exit
 May:
 	la $v0, Month_5
-	addi $v1, $zero, 3
 	j Month_in_Year_exit
 Jun:
 	la $v0, Month_6
-	addi $v1, $zero, 4
 	j Month_in_Year_exit
 Jul:
 	la $v0, Month_7
-	addi $v1, $zero, 4
 	j Month_in_Year_exit
 Aug:
 	la $v0, Month_8
-	addi $v1, $zero, 6
 	j Month_in_Year_exit
 Sep:
 	la $v0, Month_9
-	addi $v1, $zero, 9
 	j Month_in_Year_exit
 Oct:
 	la $v0, Month_10
-	addi $v1, $zero, 7
 	j Month_in_Year_exit
 Nov:
 	la $v0, Month_11
-	addi $v1, $zero, 8
 	j Month_in_Year_exit
 Dec:
 	la $v0, Month_12
-	addi $v1, $zero, 8
 Month_in_Year_exit:
 	jr $ra
