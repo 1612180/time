@@ -95,6 +95,18 @@ main:
 	addi $v0, $zero, 4
 	syscall
 
+	la $a0, TIME_1
+	la $a1, str_temp
+	jal nhap_time
+
+	la $a0 ,TIME_1
+	addi $a1, $zero, 66
+	jal Convert
+
+	la $a0, TIME_1
+	addi $v0, $zero, 4
+	syscall
+
         # exit
         addi $v0, $zero, 10
         syscall
@@ -187,49 +199,14 @@ Convert_A:
 	j Convert_exit
 Convert_B:
 	# DD/MM/YYYY -> Month DD, YYYY
-	add $t6, $a0, $zero 	# $t6 = TIME
+	# save to stack
+	addi $sp, $sp, -32
+	sw $a0, 28($sp)
 
-	# Get month (int) from TIME
-	jal Month
-	# Convert month (int) to month (string)
-	add $a0, $v0, $zero
-	jal Month_in_String 	# $v0: month (string), $v1: length
+	# restore from stack
+	lw $a0, 28($sp)
+	addi $sp, $sp, 32
 
-	#Get back TIME
-	add $a0,$t6,$zero
-
-	#Get Day(string)DD TIME[0:1] from TIME
-	la $t0,TEMP_1
-	lh $t1,0($a0) # load DD from TIME
-	sh $t1,0($t0) # store DD to TEMP
-	sb $t7,2($t0) # store ','
-	sb $zero,3($t0) #store '\0'
-
-	#Get Year(string)YYYY TIME[6:9] from TIME
-	la $t1,TEMP_2
-	lh $t2,6($a0) #load half YYYY from TIME
-	sh $t2,0($t1) #store half YYYY to TEMP
-	lh $t2,8($a0) #load half YYYY from TIME
-	sh $t2,2($t1) #store half YYYY to TEMP
-	sb $zero,4($t1) #store '\0'
-
-	#Store month(string) into TIME[] $a0
-	add $a1,$v0,$zero
-	jal strcpy
-
-	addi $t5,$zero,32 # 32 is 'space'
-	add $t3,$a0,$v1
-	sb $t5,0($t3) # store space
-	addi $t3,$t3,1
-	sb $zero,0($t3) # store '\0'
-
-	#Store DD into TIME[] $a0
-	add $a1,$t0,$zero
-	jal strcat
-
-	#Store YYYY into TIME[14:17] $a0
-	add $a1,$t1,$zero
-	jal strcat
 	j Convert_exit
 Convert_C:
 	# DD/MM/YYYY -> DD Month, YYYY
@@ -643,11 +620,8 @@ dem_skip:
 #	$a1: string y
 strcpy:
 	# save to stack
-	addi $sp, $sp, -16
+	addi $sp, $sp, -4
 	sw $s0, 0($sp)
-	sw $t0, 4($sp)
-	sw $t1, 8($sp)
-	sw $t2, 12($sp)
 
 	add $s0, $zero, $zero 		# i = 0
 strcpy_loop:
@@ -661,10 +635,7 @@ strcpy_loop:
 strcpy_exit:
 	# restore from stack
 	lw $s0, 0($sp)
-	lw $t0, 4($sp)
-	lw $t1, 8($sp)
-	lw $t2, 12($sp)
-	addi $sp,$sp,16
+	addi $sp, $sp, 4
 	jr $ra
 
 # Ham noi y vao x
@@ -673,12 +644,9 @@ strcpy_exit:
 #	$a1 string y
 strcat:
 	# save to stack
-	addi $sp, $sp,-20
+	addi $sp, $sp, -8
 	sw $s0, 0($sp)
 	sw $s1, 4($sp)
-	sw $t3, 8($sp)
-	sw $t4, 12($sp)
-	sw $t5, 16($sp)
 
 	add $s0, $zero, $zero		# $s0 la i = 0
 	add $s1, $zero, $zero 		# $s1 la j = 0
@@ -701,10 +669,7 @@ strcat_exit:
 	# restore from stack
 	lw $s0, 0($sp)
 	lw $s1, 4($sp)
-	lw $t3, 8($sp)
-	lw $t4, 12($sp)
-	lw $t5, 16($sp)
-	addi $sp, $sp, 20
+	addi $sp, $sp, 8
 	jr $ra
 
 # Ham tra ve ten thang trong nam
@@ -712,10 +677,6 @@ strcat_exit:
 # 	$v0 month (string)
 #	$v1 length month (string)
 Month_in_String:
-	# save to stack
-	addi $sp, $sp, -4
-	sw $t0, 0($sp)
-
 	slti $t0, $a0, 2 	# if month < 2 => month == 1
 	bne $t0, $zero, Jan 	# jump to January
 
@@ -798,7 +759,4 @@ Dec:
 	la $v0, Month_12
 	addi $v1, $zero, 8
 Month_in_Year_exit:
-	# restore from stack
-	lw $t0, 0($sp)
-	addi $sp, $sp, 4
 	jr $ra
