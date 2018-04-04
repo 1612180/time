@@ -3,11 +3,10 @@
 # 1612628 - Nguyen Duy Thanh
 # 1612403 - Tran Hoai Nam
 
-# TODO Convert in type B, C
 # TODO char* Weekday(char* TIME)
 # TODO dem so ngay giua hai nam
 # TODO 2 nam nhuan gan nhat
-# TODO main
+# TODO hoan thien cac yeu cau cua main
 
         .data
 msg_nhap_ngay:
@@ -32,6 +31,8 @@ yeu_cau_1:
 	.asciiz "1. Xuat chuoi TIME theo dinh dang DD/MM/YYYY\n"
 yeu_cau_2:
 	.asciiz "2. Xuat chuoi TIME thanh mot trong cac dinh dang sau\n   A. MM/DD/YYYY\n   B. Month DD, YYYY\n   C. DD Month, YYYY\n"
+yeu_cau_2_type:
+	.asciiz "Chon dinh dang A, B hay C\n"
 yeu_cau_3:
 	.asciiz "3. Cho biet ngay vua nhap la thu may trong tuan\n"
 yeu_cau_4:
@@ -66,48 +67,86 @@ Month_11:
 	.asciiz "November"
 Month_12:
 	.asciiz "December"
+msg_convert_khonghople:
+	.asciiz "Type khong phai A, B, C\n"
 
         .text
+
+# Ham main cho nguoi dung chon yeu cau
+# 	$s0 save TIME_1
+#	$s1 yeu cau cua nguoi dung
 main:
+	# Nhap ngay, thang, nam TIME_1 luu vao $s0
+	la $a0, TIME_1
+	jal nhap_time
+	add $s0, $zero, $v0
+
 	# In ra toan bo yeu cau
 	la $a0, yeu_cau_chon
-	addi $v0, $zero, 4
+	addi $v0, $zero, 4	# syscall print string
 	syscall
 	la $a0, yeu_cau_1
-	addi $v0, $zero, 4
+	addi $v0, $zero, 4	# syscall print string
 	syscall
 	la $a0, yeu_cau_2
-	addi $v0, $zero, 4
+	addi $v0, $zero, 4	# syscall print string
 	syscall
 	la $a0, yeu_cau_3
-	addi $v0, $zero, 4
+	addi $v0, $zero, 4	# syscall print string
 	syscall
 	la $a0, yeu_cau_4
-	addi $v0, $zero, 4
+	addi $v0, $zero, 4	# syscall print string
 	syscall
 	la $a0, yeu_cau_5
-	addi $v0, $zero, 4
+	addi $v0, $zero, 4	# syscall print string
 	syscall
 	la $a0, yeu_cau_6
-	addi $v0, $zero, 4
+	addi $v0, $zero, 4	# syscall print string
 	syscall
 	la $a0, yeu_cau_7
-	addi $v0, $zero, 4
+	addi $v0, $zero, 4	# syscall print string
 	syscall
 
-	la $a0, TIME_1
-	la $a1, str_temp
-	jal nhap_time
+	# Doc yeu cau cua nguoi dung, luu vao $s1
+	addi $v0, $zero, 5	# syscall read int
+	syscall
+	add $s1, $zero, $v0
 
-	la $a0 ,TIME_1
-	addi $a1, $zero, 67
+	addi $t0, $zero, 1	# yeu cau 1
+	beq $s1, $t0, main_yc1
+	addi $t0, $zero, 2	# yeu cau 2
+	beq $s1, $t0, main_yc2
+main_yc1:
+	# Print DD/MM/YYYY
+	add $a0, $zero, $s0
+	addi $v0, $zero, 4	# syscall print string
+	syscall
+	j main_exit
+main_yc2:
+	# Chon dinh dang A, B hay C
+	la $a0, yeu_cau_2_type
+	addi $v0, $zero, 4	# syscall print string
+	syscall
+	addi $v0, $zero, 12	# syscall read char
+	syscall
+	add $s2, $zero, $v0	# $s2 = type
+
+	# print new line
+	add $a0, $zero, 10	# 10 is '\n'
+	addi $v0, $zero, 11	# syscall print char
+	syscall
+
+	# Convert
+	add $a0, $zero, $s0
+	add $a1, $zero, $s2	# $s2 la type nhap vao
 	jal Convert
 
-	la $a0, TIME_1
-	addi $v0, $zero, 4
+	# In dinh dang da chuyen doi
+	add $a0, $zero, $s0
+	addi $v0, $zero, 4	# syscall print string
 	syscall
-
-        # exit
+	j main_exit
+main_exit:
         addi $v0, $zero, 10
         syscall
 
@@ -179,10 +218,13 @@ Date:
 #	type 'B': Month DD, YYYY
 #	type 'C': DD Month, YYYY
 Convert:
-	beq $a1, 65, Convert_A	# 65 is 'A'
-	beq $a1, 66, Convert_B
-	beq $a1, 67, Convert_C
-	j Convert_exit
+	addi $t0, $zero, 65	# 65 is 'A'
+	beq $a1, $t0, Convert_A
+	addi $t0, $zero, 66
+	beq $a1, $t0, Convert_B
+	addi $t0, $zero, 67
+	beq $a1, $t0, Convert_C
+	j Convert_khonghople
 Convert_A:
 	# DD/MM/YYYY -> MM/DD/YYYY
 	# only swap day <-> month
@@ -326,6 +368,21 @@ Convert_C:
 	lw $a1, 20($sp)
 	addi $sp, $sp, 32
 
+	j Convert_exit
+Convert_khonghople:
+	# save to stack
+	addi $sp, $sp, -8
+	sw $a0, 4($sp)
+	sw $a1, 0($sp)
+
+	la $a0, msg_convert_khonghople
+	addi $v0, $zero, 4	# syscall print string
+	syscall
+
+	# restore from stack
+	lw $a0, 4($sp)
+	lw $a1, 0($sp)
+	addi $sp, $sp, 8
 	j Convert_exit
 Convert_exit:
 	add $v0, $zero, $a0	# tra ve $a0 giu dia chi TIME
