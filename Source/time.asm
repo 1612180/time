@@ -38,6 +38,30 @@ yeu_cau_6:
 	.asciiz "6. Cho biet 2 nam nhuan gan nhat voi nam trong chuoi TIME\n"
 yeu_cau_7:
 	.asciiz "7. Kiem tra bo du lieu dau vao khi nhap, neu du lieu khong hop le thi yeu cau nguoi dung nhap lai\n"
+Month_1:
+	.asciiz "January"
+Month_2:
+	.asciiz "Frebuary"
+Month_3:
+	.asciiz "March"
+Month_4:
+	.asciiz "April"
+Month_5:
+	.asciiz "May"
+Month_6:
+	.asciiz "June"
+Month_7:
+	.asciiz "July"
+Month_8:
+	.asciiz "August"
+Month_9:
+	.asciiz "September"
+Month_10:
+	.asciiz "October"
+Month_11:
+	.asciiz "November"
+Month_12:
+	.asciiz "December"
 
         .text
 main:
