@@ -22,6 +22,10 @@ TIME_2:
 	.space 1024
 str_temp:
 	.space 1024
+TEMP_1:
+	.space 1024
+TEMP_2:
+	.space 1024
 yeu_cau_chon:
 	.asciiz "----Ban hay chon 1 trong cac thao tac duoi day----\n"
 yeu_cau_1:
@@ -41,7 +45,7 @@ yeu_cau_7:
 Month_1:
 	.asciiz "January"
 Month_2:
-	.asciiz "Frebuary"
+	.asciiz "February"
 Month_3:
 	.asciiz "March"
 Month_4:
@@ -183,7 +187,49 @@ Convert_A:
 	j Convert_exit
 Convert_B:
 	# DD/MM/YYYY -> Month DD, YYYY
+	add $t6, $a0, $zero 	# $t6 = TIME
 
+	# Get month (int) from TIME
+	jal Month
+	# Convert month (int) to month (string)
+	add $a0, $v0, $zero
+	jal Month_in_String 	# $v0: month (string), $v1: length
+
+	#Get back TIME
+	add $a0,$t6,$zero
+
+	#Get Day(string)DD TIME[0:1] from TIME
+	la $t0,TEMP_1
+	lh $t1,0($a0) # load DD from TIME
+	sh $t1,0($t0) # store DD to TEMP
+	sb $t7,2($t0) # store ','
+	sb $zero,3($t0) #store '\0'
+
+	#Get Year(string)YYYY TIME[6:9] from TIME
+	la $t1,TEMP_2
+	lh $t2,6($a0) #load half YYYY from TIME
+	sh $t2,0($t1) #store half YYYY to TEMP
+	lh $t2,8($a0) #load half YYYY from TIME
+	sh $t2,2($t1) #store half YYYY to TEMP
+	sb $zero,4($t1) #store '\0'
+
+	#Store month(string) into TIME[] $a0
+	add $a1,$v0,$zero
+	jal strcpy
+
+	addi $t5,$zero,32 # 32 is 'space'
+	add $t3,$a0,$v1
+	sb $t5,0($t3) # store space
+	addi $t3,$t3,1
+	sb $zero,0($t3) # store '\0'
+
+	#Store DD into TIME[] $a0
+	add $a1,$t0,$zero
+	jal strcat
+
+	#Store YYYY into TIME[14:17] $a0
+	add $a1,$t1,$zero
+	jal strcat
 	j Convert_exit
 Convert_C:
 	# DD/MM/YYYY -> DD Month, YYYY
@@ -551,9 +597,9 @@ is_only_digits_loop:
 	beq $t1, $zero, is_only_digits_exit 	# neu *p == '\0'
 	addi $t2, $zero, 10
 	beq $t1, $t2, is_only_digits_exit 	# neu *p == '\n'
-	slt $t2, $t1, 48			# 48 la '0'
+	slti $t2, $t1, 48			# 48 la '0'
 	bne $t2, $zero, is_only_digits_non	# neu *p < '0'
-	slt $t2, $t1, 58			# 57 la '9'
+	slti $t2, $t1, 58			# 57 la '9'
 	beq $t2, $zero, is_only_digits_non	# neu *p > '9'
 	addi $t0, $t0, 1			# p += 1
 	j is_only_digits_loop
@@ -659,4 +705,100 @@ strcat_exit:
 	lw $t4, 12($sp)
 	lw $t5, 16($sp)
 	addi $sp, $sp, 20
+	jr $ra
+
+# Ham tra ve ten thang trong nam
+#	$a0 month (integer)
+# 	$v0 month (string)
+#	$v1 length month (string)
+Month_in_String:
+	# save to stack
+	addi $sp, $sp, -4
+	sw $t0, 0($sp)
+
+	slti $t0, $a0, 2 	# if month < 2 => month == 1
+	bne $t0, $zero, Jan 	# jump to January
+
+	slti $t0, $a0, 3 	# if month < 3 => month == 2
+	bne $t0, $zero, Feb 	# jump to February
+
+	slti $t0, $a0, 4	# if month < 4 => month == 3
+	bne $t0, $zero, Mar 	# jump to March
+
+	slti $t0, $a0, 5 	# if month < 5 => month == 4
+	bne $t0, $zero, Apr 	# jump to April
+
+	slti $t0, $a0, 6 	# if month < 6 => month == 5
+	bne $t0, $zero, May 	# jump to May
+
+	slti $t0, $a0, 7 	# if month < 7 => month == 6
+	bne $t0, $zero, Jun 	# jump to June
+
+	slti $t0, $a0, 8 	# if month < 8 => month == 7
+	bne $t0, $zero, Jul 	# jump to July
+
+	slti $t0, $a0, 9 	# if month < 9 => month == 8
+	bne $t0, $zero, Aug 	# jump to August
+
+	slti $t0, $a0, 10 	# if month < 10 => month == 9
+	bne $t0, $zero, Sep 	# jump to September
+
+	slti $t0, $a0, 11 	# if month < 11 => month == 10
+	bne $t0, $zero, Oct 	# jump to October
+
+	slti $t0, $a0, 12 	# if month < 12 => month == 11
+	bne $t0, $zero, Nov 	# jump to November
+
+	j Dec 			# jump to December
+Jan:
+	la $v0, Month_1
+	addi $v1, $zero, 7
+	j Month_in_Year_exit
+Feb:
+	la $v0, Month_2
+	addi $v1, $zero, 8
+	j Month_in_Year_exit
+Mar:
+	la $v0, Month_3
+	addi $v1, $zero, 5
+	j Month_in_Year_exit
+Apr:
+	la $v0, Month_4
+	addi $v1, $zero, 5
+	j Month_in_Year_exit
+May:
+	la $v0, Month_5
+	addi $v1, $zero, 3
+	j Month_in_Year_exit
+Jun:
+	la $v0, Month_6
+	addi $v1, $zero, 4
+	j Month_in_Year_exit
+Jul:
+	la $v0, Month_7
+	addi $v1, $zero, 4
+	j Month_in_Year_exit
+Aug:
+	la $v0, Month_8
+	addi $v1, $zero, 6
+	j Month_in_Year_exit
+Sep:
+	la $v0, Month_9
+	addi $v1, $zero, 9
+	j Month_in_Year_exit
+Oct:
+	la $v0, Month_10
+	addi $v1, $zero, 7
+	j Month_in_Year_exit
+Nov:
+	la $v0, Month_11
+	addi $v1, $zero, 8
+	j Month_in_Year_exit
+Dec:
+	la $v0, Month_12
+	addi $v1, $zero, 8
+Month_in_Year_exit:
+	# restore from stack
+	lw $t0, 0($sp)
+	addi $sp, $sp, 4
 	jr $ra
