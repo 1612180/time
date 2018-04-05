@@ -78,6 +78,7 @@ msg_convert_khonghople:
 main:
 	# Nhap ngay, thang, nam TIME_1 luu vao $s0
 	la $a0, TIME_1
+	la $a1, str_temp
 	jal nhap_time
 	add $s0, $zero, $v0
 
