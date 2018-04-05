@@ -3,10 +3,7 @@
 # 1612628 - Nguyen Duy Thanh
 # 1612403 - Tran Hoai Nam
 
-# TODO char* Weekday(char* TIME)
-# TODO dem so ngay giua hai nam
-# TODO 2 nam nhuan gan nhat
-# TODO hoan thien cac yeu cau cua main
+# TODO yeu cau 3, 5 ,6
 
         .data
 msg_nhap_ngay:
@@ -69,18 +66,29 @@ Month_12:
 	.asciiz "December"
 msg_convert_khonghople:
 	.asciiz "Type khong phai A, B, C\n"
+msg_yc_khonghople:
+	.asciiz "Yeu cau nhap vao khong phai 1-7\n"
+msg_nam_nhuan:
+	.asciiz "Nam nhuan\n"
+msg_nam_khong_nhuan:
+	.asciiz "Khong phai nam nhuan\n"
+msg_input_hople:
+	.asciiz "Du lieu dau vao hop le\n"
+msg_input_khonghople:
+	.asciiz "Du lieu dau vao khong hop le\n"
 
         .text
-
 # Ham main cho nguoi dung chon yeu cau
 # 	$s0 save TIME_1
-#	$s1 yeu cau cua nguoi dung
+#	$s1 tinh hop le TIME_1
+#	$s2 yeu cau cua nguoi dung
 main:
 	# Nhap ngay, thang, nam TIME_1 luu vao $s0
 	la $a0, TIME_1
 	la $a1, str_temp
 	jal nhap_time
-	add $s0, $zero, $v0
+	add $s0, $zero, $v0	# save TIME_1
+	add $s1, $zero, $v1	# save hop le TIME_1
 
 	# In ra toan bo yeu cau
 	la $a0, yeu_cau_chon
@@ -108,21 +116,28 @@ main:
 	addi $v0, $zero, 4	# syscall print string
 	syscall
 
-	# Doc yeu cau cua nguoi dung, luu vao $s1
+	# Doc yeu cau cua nguoi dung, luu vao $s2
 	addi $v0, $zero, 5	# syscall read int
 	syscall
-	add $s1, $zero, $v0
+	add $s2, $zero, $v0
 
 	addi $t0, $zero, 1	# yeu cau 1
-	beq $s1, $t0, main_yc1
+	beq $s2, $t0, main_yc1
 	addi $t0, $zero, 2	# yeu cau 2
-	beq $s1, $t0, main_yc2
+	beq $s2, $t0, main_yc2
+	addi $t0, $zero, 4 	# yeu cau 4
+	beq $s2, $t0, main_yc4
+	addi $t0, $zero, 7 	# yeu cau 7
+	beq $s2, $t0, main_yc7
+
+	j main_yc_khonghople
 main_yc1:
 	# Print DD/MM/YYYY
-	add $a0, $zero, $s0
+	add $a0, $zero, $s0	# TIME_1
 	addi $v0, $zero, 4	# syscall print string
 	syscall
 	j main_exit
+
 main_yc2:
 	# Chon dinh dang A, B hay C
 	la $a0, yeu_cau_2_type
@@ -138,7 +153,7 @@ main_yc2:
 	syscall
 
 	# Convert
-	add $a0, $zero, $s0
+	add $a0, $zero, $s0	# TIME_1
 	add $a1, $zero, $s2	# $s2 la type nhap vao
 	jal Convert
 
@@ -147,6 +162,42 @@ main_yc2:
 	addi $v0, $zero, 4	# syscall print string
 	syscall
 	j main_exit
+
+main_yc4:
+	add $a0, $zero, $s0	# TIME_1
+	jal LeapYear
+	beq $v0, $zero, main_yc4_khong_nhuan
+	la $a0, msg_nam_nhuan
+	addi $v0, $zero, 4	# syscall print string
+	syscall
+	jal main_yc4_exit
+main_yc4_khong_nhuan:
+	la $a0, msg_nam_khong_nhuan
+	addi $v0, $zero, 4	# syscall print string
+	syscall
+	jal main_yc4_exit
+main_yc4_exit:
+	j main_exit
+
+main_yc7:
+	beq $s1, $zero, main_yc7_input_khonghople
+	la $a0, msg_input_hople
+	addi $v0, $zero, 4	# syscall print string
+	syscall
+	j main_yc7_exit
+main_yc7_input_khonghople:
+	la $a0, msg_input_khonghople
+	addi $v0, $zero, 4	# syscall print string
+	syscall
+main_yc7_exit:
+	j main_exit
+
+main_yc_khonghople:
+	la $a0, msg_yc_khonghople
+	addi $v0, $zero, 4	# syscall print string
+	syscall
+	j main_exit
+
 main_exit:
         addi $v0, $zero, 10
         syscall
@@ -660,10 +711,16 @@ GetTime_exit:
 #	$v1 tinh hop le 	1 - hop le, 0 - khong hop le
 nhap_time:
 	# save to stack
-	addi $sp, $sp, -32
+	addi $sp, $sp, -36
+	sw $s0, 32($sp)		# luu tinh hop le chuoi ngay, thang, nam
 	sw $ra, 28($sp)
 	sw $a0, 24($sp)
 	sw $a1, 20($sp)
+
+	# $s0 kiem tra hop le bang cach
+	# tinh tong hop le ngay thang nam
+	# neu $s0 == 3, ngay thang nam deu hop le
+	add $s0, $zero, $zero
 
 	# Nhap chuoi ngay
 	addi $v0, $zero, 4	# syscall print string
@@ -674,7 +731,7 @@ nhap_time:
 	addi $a1, $zero, 1024	# max size of str_temp
 	syscall
 	jal is_only_digits	# kiem tra hop le syntax ngay
-	beq $v0, $zero, nhap_time_non_valid	# neu chuoi ngay khong hop le
+	add $s0, $s0, $v0 	# $s0 += hop le ngay
 	# Chuyen ngay string -> int
 	lw $a0, 20($sp)		# $a0 save str_temp
 	jal atoi_whole
@@ -689,7 +746,7 @@ nhap_time:
 	addi $a1, $zero, 1024 	# max size of str_temp
 	syscall
 	jal is_only_digits 	# kiem tra hop le syntax thang
-	beq $v0, $zero, nhap_time_non_valid 	# neu chuoi thang khong hop le
+	add $s0, $s0, $v0	# $s0 += hop le thang
 	# Chuyen thang string -> int
 	lw $a0, 20($sp)		# $a0 save str_temp
 	jal atoi_whole
@@ -704,7 +761,7 @@ nhap_time:
 	addi $a1, $zero, 1024 	# max size of str_temp
 	syscall
 	jal is_only_digits 	# kiem tra hop le syntax nam
-	beq $v0, $zero, nhap_time_non_valid 	# neu chuoi nam khong hop le
+	add $s0, $s0, $v0	# $s0 += hop le nam
 	# Chuyen nam string -> int
 	lw $a0, 20($sp) 	# $a0 save str_temp
 	jal atoi_whole
@@ -717,6 +774,10 @@ nhap_time:
 	lw $a3, 24($sp) 	# dia chi luu TIME
 	jal Date
 
+	# Kiem tra TIME hop le syntax
+	addi $t0, $zero, 3	# tong hop le ngay thang nam
+	bne $s0, $t0, nhap_time_non_valid
+
 	# Kiem tra TIME hop le logic
 	lw $a0, 24($sp)
 	jal check_hop_le
@@ -728,10 +789,11 @@ nhap_time_non_valid:
 	add $v1, $zero, $zero	# $v1 = 0, khong hop le
 nhap_time_exit:
 	# restore from stack
+	lw $s0, 32($sp)
 	lw $ra, 28($sp)
 	lw $a0, 24($sp)
 	lw $a1, 20($sp)
-	addi $sp, $sp, 32
+	addi $sp, $sp, 36
 
 	add $v0, $zero, $a0	# $v0 tra ve dia chi TIME
 	jr $ra
