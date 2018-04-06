@@ -3,8 +3,6 @@
 # 1612628 - Nguyen Duy Thanh
 # 1612403 - Tran Hoai Nam
 
-# TODO yeu cau 3, 5 ,6
-
         .data
 msg_nhap_ngay:
         .asciiz "Nhap ngay DAY: "
