@@ -76,6 +76,20 @@ msg_input_hople:
 	.asciiz "Du lieu dau vao hop le\n"
 msg_input_khonghople:
 	.asciiz "Du lieu dau vao khong hop le\n"
+Chu_nhat:
+	.asciiz "Sun"
+Thu_2:
+	.asciiz "Mon"
+Thu_3:
+	.asciiz "Tues"
+Thu_4:
+	.asciiz "Wed"
+Thu_5:
+	.asciiz "Thurs"
+Thu_6:
+	.asciiz "Fri"
+Thu_7:
+	.asciiz "Sat"
 
         .text
 # Ham main cho nguoi dung chon yeu cau
@@ -127,6 +141,8 @@ main:
 	beq $s2, $t0, main_yc2
 	addi $t0, $zero, 4 	# yeu cau 4
 	beq $s2, $t0, main_yc4
+	addi $t0, $zero, 5 	# yeu cau 5
+	beq $s2, $t0, main_yc5
 	addi $t0, $zero, 7 	# yeu cau 7
 	beq $s2, $t0, main_yc7
 
@@ -177,6 +193,21 @@ main_yc4_khong_nhuan:
 	syscall
 	jal main_yc4_exit
 main_yc4_exit:
+	j main_exit
+
+main_yc5:
+	# get TIME_2
+	la $a0, TIME_2
+	la $a1, str_temp
+	jal nhap_time
+
+	# Tinh khoang cach
+	la $a0, TIME_1
+	la $a1, TIME_2
+	jal GetTime
+	add $a0, $zero, $v0	# Lay khoang cach luu vao $a0
+	addi $v0, $zero, 1	# syscall print int
+	syscall
 	j main_exit
 
 main_yc7:
@@ -669,36 +700,59 @@ check_hop_le_exit:
 	addi $sp, $sp, 12
 	jr $ra
 
-# Ham tra ve khoang cach thoi gian, tinh bang nam
+# Ham tra ve khoang cach thoi gian, tinh bang ngay
 #	$a0 TIME_1
 #	$a1 TIME_2
 GetTime:
 	# save to stack
-	addi $sp, $sp, -16
-	sw $ra, 12($sp)
-	sw $a0, 8($sp)
-	sw $a1, 4($sp)
+	addi $sp, $sp, -40
+	sw $ra, 36($sp)
+	sw $a0, 32($sp)
+	sw $a1, 28($sp)
 
+	# save TIME_1
 	jal Year
-	add $t0, $zero, $v0	# $t0 = Year(TIME_1)
+	sw $v0, 24($sp)		# save Year(TIME_1)
+	jal Month
+	sw $v0, 20($sp)		# save Month(TIME_1)
+	jal Day
+	sw $v0, 16($sp)		# save Day(TIME_1)
 
-	sw $t0, 0($sp)		# $t0 will lose in next jal
-	lw $a0, 4($sp)		# load TIME_2 to $a0
+	# save TIME_2
+	lw $a0, 28($sp)		# get TIME_2
 	jal Year
-	add $t1, $zero, $v0	# $t1 = Year(TIME_2)
-	lw $t0, 0($sp)		# restore $t0
+	sw $v0, 12($sp)		# save Year(TIME_2)
+	jal Month
+	sw $v0, 8($sp)		# save Month(TIME_2)
+	jal Day
+	sw $v0, 4($sp)		# save Day(TIME_2)
 
-	sub $v0, $t0, $t1 	# Year(TIME_1) - Year(TIME_2)
-	slt $t2, $v0, $zero
-	beq $t2, $zero, GetTime_exit
-	sub $v0, $zero, $v0	# doi dau neu $v0 < 0
+	# ngay tuyet doi TIME_1
+	lw $a0, 24($sp)		# get Year(TIME_1)
+	lw $a1, 20($sp)		# get Month(TIME_1)
+	lw $a2, 16($sp)		# get Day(TIME_1)
+	jal ngayTuyetDoi
+	sw $v0, 0($sp)		# save ngay tuyet doi TIME_1
+
+	# ngay tuyet doi TIME_2
+	lw $a0, 12($sp)		# get Year(TIME_2)
+	lw $a1, 8($sp)		# get Month(TIME_2)
+	lw $a2, 4($sp)		# get Day(TIME_2)
+	jal ngayTuyetDoi
+	lw $t0, 0($sp)		# get ngay tuyet doi TIME_1
+	sub $v0, $v0, $t0	# tru 2 ngay tuyet doi
+
+	# Kiem tra ket qua < 0 hay khong
+	slt $t1, $v0, $zero
+	beq $t1, $zero, GetTime_exit
+	sub $v0, $zero, $v0
 
 GetTime_exit:
 	# restore from stack
-	lw $ra, 12($sp)
-	lw $a0, 8($sp)
-	lw $a1, 4($sp)
-	addi $sp, $sp, 16
+	lw $ra, 36($sp)
+	lw $a0, 32($sp)
+	lw $a1, 28($sp)
+	addi $sp, $sp, 40
 	jr $ra
 
 # Ham nhap thoi gian theo ngay, thang, nam
@@ -982,4 +1036,89 @@ Nov:
 Dec:
 	la $v0, Month_12
 Month_in_Year_exit:
+	jr $ra
+
+# Ham dem so ngay tuyet doi theo cong thuc
+# ngayTuyetDoi = nam * 365 + ngayTuyetDoiTrongNam + soNamNhuan
+# soNamNhuan la so nam nhuan tu nam 0 den nam hien tai
+# ngayTuyetDoiTrongNam duoc tinh theo nam thuong, khong xet truong hop nam nhuan
+# 	$a0 nam
+# 	$a1 thang
+#	$a2 ngay
+ngayTuyetDoi:
+	# Ket qua += nam * 365
+	add $v0, $zero, $a0 	# Ket qua = nam
+	addi $t0, $zero, 365 	# Gan bien tam t0 = 365
+	mult $v0, $t0 		# Thuc hien phep nhan nam * 365
+	mflo $v0 		# Ket qua = nam * 365
+
+	# Ket qua += ngay
+	add $v0, $v0, $a2 	# Ket qua = nam * 365 + ngay
+
+	# Ket qua += ngay trong thang truoc do
+	addi $t0, $zero,1 	# Gan bien tam t0 = 1 (thang 1)
+	bne $t0, $a1, ngayTuyetDoi_t2
+	addi $v0, $v0, 0 	# Ket qua = nam * 365 + ngayTuyetDoiTrongNam
+	j ngayTuyetDoi_next
+ngayTuyetDoi_t2:
+	addi $t0, $zero, 2 	# Gan bien tam t0 = 2 (thang 2)
+	bne $t0, $a1, ngayTuyetDoi_t3
+	addi $v0, $v0, 31 	# Ket qua = nam * 365 + ngayTuyetDoiTrongNam
+	j ngayTuyetDoi_next
+ngayTuyetDoi_t3:
+	addi $t0, $zero, 3 	# Gan bien tam t0 = 3 (thang 3)
+	bne $t0, $a1, ngayTuyetDoi_t4
+	addi $v0, $v0, 59 	# Ket qua = nam * 365 + ngayTuyetDoiTrongNam
+	j ngayTuyetDoi_next
+ngayTuyetDoi_t4:
+	addi $t0, $zero, 4 	# Gan bien tam t0 = 4 (thang 4)
+	bne $t0, $a1, ngayTuyetDoi_t5
+	addi $v0, $v0, 90 	# Ket qua = nam * 365 + ngayTuyetDoiTrongNam
+	j ngayTuyetDoi_next
+ngayTuyetDoi_t5:
+	addi $t0, $zero, 5 	# Gan bien tam t0 = 5 (thang 5)
+	bne $t0, $a1, ngayTuyetDoi_t6
+	addi $v0, $v0, 120 	# Ket qua = nam * 365 + ngayTuyetDoiTrongNam
+	j ngayTuyetDoi_next
+ngayTuyetDoi_t6:
+	addi $t0, $zero, 6 	# Gan bien tam t0 = 6 (thang 6)
+	bne $t0, $a1, ngayTuyetDoi_t7
+	addi $v0, $v0, 151 	# Ket qua = nam * 365 + ngayTuyetDoiTrongNam
+	j ngayTuyetDoi_next
+ngayTuyetDoi_t7:
+	addi $t0, $zero, 7 	# Gan bien tam t0 = 7 (thang 7)
+	bne $t0, $a1, ngayTuyetDoi_t8
+	addi $v0, $v0, 181 	# Ket qua = nam * 365 + ngayTuyetDoiTrongNam
+	j ngayTuyetDoi_next
+ngayTuyetDoi_t8:
+	addi $t0, $zero, 8 	# Gan bien tam t0 = 8 (thang 8)
+	bne $t0, $a1, ngayTuyetDoi_t9
+	addi $v0, $v0, 212 	#Ket qua = nam * 365 + ngayTuyetDoiTrongNam
+	j ngayTuyetDoi_next
+ngayTuyetDoi_t9:
+	addi $t0, $zero, 9 	# Gan bien tam t0 = 9 (thang 9)
+	bne $t0, $a1, ngayTuyetDoi_t10
+	addi $v0, $v0, 243	# Ket qua = nam * 365 + ngayTuyetDoiTrongNam
+	j ngayTuyetDoi_next
+ngayTuyetDoi_t10:
+	addi $t0, $zero, 10 	# Gan bien tam t0 = 10 (thang 10)
+	bne $t0, $a1, ngayTuyetDoi_t11
+	addi $v0, $v0, 273 	# Ket qua = nam * 365 + ngayTuyetDoiTrongNam
+	j ngayTuyetDoi_next
+ngayTuyetDoi_t11:
+	addi $t0, $zero, 11 	# Gan bien tam t0 = 11 (thang 11)
+	bne $t0, $a1, ngayTuyetDoi_t12
+	addi $v0, $v0, 304 	# Ket qua = nam * 365 + ngayTuyetDoiTrongNam
+	j ngayTuyetDoi_next
+ngayTuyetDoi_t12:
+	addi $v0, $v0, 334 	# Ket qua = nam * 365 + ngayTuyetDoiTrongNam
+ngayTuyetDoi_next:
+	addi $sp, $sp, -8
+	sw $ra, 4($sp) 		# Luu $ra
+	sw $v0, 0($sp) 		# Luu bien $v0
+	jal demSoNamNhuan
+	lw $t0, 0($sp)		# Lay lai ket qua = nam * 365 + ngayTuyetDoiTrongNam
+	add $v0, $v0, $t0 	# ketqua = nam * 365 + ngayTuyetDoiTrongNam + soNamNhuan
+	lw $ra, 4($sp) 		# Tra lai $ra
+	addi $sp, $sp, 8
 	jr $ra
