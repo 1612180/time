@@ -73,9 +73,9 @@ msg_nam_nhuan:
 msg_nam_khong_nhuan:
 	.asciiz "Khong phai nam nhuan\n"
 msg_input_hople:
-	.asciiz "Du lieu dau vao hop le\n"
+	.asciiz "Hop le\n"
 msg_input_khonghople:
-	.asciiz "Du lieu dau vao khong hop le\n"
+	.asciiz "Khong hop le\n"
 str_Chu_nhat:
 	.asciiz "Sun"
 str_Thu_2:
@@ -90,6 +90,8 @@ str_Thu_6:
 	.asciiz "Fri"
 str_Thu_7:
 	.asciiz "Sat"
+msg_hai_nam_nhuan_next:
+	.asciiz "Hai nam nhuan tiep theo la \n"
 
         .text
 # Ham main cho nguoi dung chon yeu cau
@@ -145,6 +147,8 @@ main:
 	beq $s2, $t0, main_yc4
 	addi $t0, $zero, 5 	# yeu cau 5
 	beq $s2, $t0, main_yc5
+	addi $t0, $zero, 6 	# yeu cau 6
+	beq $s2, $t0, main_yc6
 	addi $t0, $zero, 7 	# yeu cau 7
 	beq $s2, $t0, main_yc7
 
@@ -216,6 +220,28 @@ main_yc5:
 	la $a1, TIME_2
 	jal GetTime
 	add $a0, $zero, $v0	# Lay khoang cach luu vao $a0
+	addi $v0, $zero, 1	# syscall print int
+	syscall
+	j main_exit
+
+main_yc6:
+	la $a0, msg_hai_nam_nhuan_next
+	addi $v0, $zero, 4	# syscall print string
+	syscall
+
+	add $a0, $zero, $s0	# get TIME
+	jal nam_nhuan_closer
+	add $a0, $zero, $v0	# get nam nhuan 1
+	add $s3, $zero, $v1	# save nam nhuan 2
+	addi $v0, $zero, 1 	# syscall print int
+	syscall
+
+	# print new line
+	add $a0, $zero, 10	# 10 is '\n'
+	addi $v0, $zero, 11	# syscall print char
+	syscall
+
+	add $a0, $zero, $s3 	# get nam nhuan 2
 	addi $v0, $zero, 1	# syscall print int
 	syscall
 	j main_exit
@@ -541,7 +567,32 @@ Year:
 	addi $sp, $sp, 4
 	jr $ra
 
-# Ham kiem tra nam nhuan
+# Ham kiem tra nam nhuan chi voi nam
+# 	$a0 year
+only_year_is_leap:
+	addi $t1, $zero, 400
+	div $a0, $t1
+	mfhi $t2 				# $t2 = year % 400
+	beq $t2, $zero, only_year_is_leap_true	# neu year chia het cho 400
+
+	addi $t1, $zero, 4
+	div $a0, $t1
+	mfhi $t2 				# $t2 = year % 4
+	bne $t2, $zero, only_year_is_leap_false # neu year khong chia het cho 4
+
+	addi $t1, $zero, 100
+	div $a0, $t1
+	mfhi $t2 				# $t2 = year % 100
+	beq $t2, $zero, only_year_is_leap_false # neu year chia het cho 4 va 100
+only_year_is_leap_true:
+	addi $v0, $zero, 1			# $t0 tra ve 1 la nam nhuan
+	j only_year_is_leap_exit
+only_year_is_leap_false:
+	add $v0, $zero, $zero			# $t0 tra ve 0 la nam khnong nhuan
+only_year_is_leap_exit:
+	jr $ra
+
+# Ham kiem tra nam nhuan voi input la TIME
 #	$a0 TIME
 # 	$v0 tra ve 	1 - nam nhuan, 0 - khong phai
 LeapYear:
@@ -550,29 +601,9 @@ LeapYear:
 	sw $ra, 0($sp)
 
 	jal Year
-	add $t0, $zero, $v0			# $t0 save year
+	add $a0, $zero, $v0
+	jal only_year_is_leap
 
-	addi $t1, $zero, 400
-	div $t0, $t1
-	mfhi $t2 				# $t2 = year % 400
-	beq $t2, $zero, LeapYear_nhuan 		# neu year chia het cho 400
-
-	addi $t1, $zero, 4
-	div $t0, $t1
-	mfhi $t2 				# $t2 = year % 4
-	bne $t2, $zero, LeapYear_khong_nhuan 	# neu year khong chia het cho 4
-
-	addi $t1, $zero, 100
-	div $t0, $t1
-	mfhi $t2 				# $t2 = year % 100
-	beq $t2, $zero, LeapYear_khong_nhuan 	# neu year chia het cho 4 va 100
-LeapYear_nhuan:
-	addi $v0, $zero, 1			# $t0 tra ve 1 la nam nhuan
-	j LeapYear_exit
-LeapYear_khong_nhuan:
-	add $v0, $zero, $zero			# $t0 tra ve 0 la nam khnong nhuan
-	j LeapYear_exit
-LeapYear_exit:
 	# restore from stack
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
@@ -1181,12 +1212,12 @@ xacDinhThu_thu3:
 	la $v0, str_Thu_3
 	j xacDinhThu_end
 xacDinhThu_thu4:
-	addi $t0, $zero, 4 	#Gan bien tam t0 bang 4 (Thu 4)
+	addi $t0, $zero, 4 	# Gan bien tam t0 bang 4 (Thu 4)
 	bne $v0, $t0, xacDinhThu_thu5
 	la $v0, str_Thu_4
 	j xacDinhThu_end
 xacDinhThu_thu5:
-	addi $t0, $zero, 5 	#Gan bien tam t0 bang 5 (Thu 5)
+	addi $t0, $zero, 5 	# Gan bien tam t0 bang 5 (Thu 5)
 	bne $v0, $t0, xacDinhThu_thu6
 	la $v0, str_Thu_5
 	j xacDinhThu_end
@@ -1200,5 +1231,43 @@ xacDinhThu_thu7:
 xacDinhThu_end:
 	# restore from stack
 	lw $ra, 12($sp)
+	addi $sp, $sp, 16
+	jr $ra
+
+# Ham tra ve hai nam nhuan gan TIME nhat
+# 	$a0 TIME
+#	$v0 nam nhuan 1
+#	$v1 nam nhuan 2
+nam_nhuan_closer:
+	# save to stack
+	addi $sp, $sp, -16
+	sw $ra, 12($sp)
+	sw $a0, 8($sp)
+
+	jal Year
+	addi $v0, $v0, 1
+	sw $v0, 4($sp)		# i = year + 1
+nam_nhuan_closer_loop:
+	lw $a0, 4($sp)		# get i
+	jal only_year_is_leap
+	bne $v0, $zero, nam_nhuan_closer_next
+	lw $t0, 4($sp)
+	addi $t0, $t0, 1	# i += 1
+	sw $t0, 4($sp)		# save i
+	j nam_nhuan_closer_loop
+nam_nhuan_closer_next:
+	lw $a0, 4($sp)		# get i
+	addi $a0, $a0, 4	# i += 4 (may be leap year ?)
+	sw $a0, 0($sp)
+	jal only_year_is_leap
+	bne $v0, $zero, nam_nhuan_closer_exit
+	lw $t0, 4($sp)
+	addi $t0, $t0, 8	# i += 8 make sure leap year
+	sw $t0, 0($sp)
+nam_nhuan_closer_exit:
+	# restore from stack
+	lw $ra, 12($sp)
+	lw $v0, 4($sp)
+	lw $v1, 0($sp)
 	addi $sp, $sp, 16
 	jr $ra
