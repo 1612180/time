@@ -76,19 +76,19 @@ msg_input_hople:
 	.asciiz "Du lieu dau vao hop le\n"
 msg_input_khonghople:
 	.asciiz "Du lieu dau vao khong hop le\n"
-Chu_nhat:
+str_Chu_nhat:
 	.asciiz "Sun"
-Thu_2:
+str_Thu_2:
 	.asciiz "Mon"
-Thu_3:
+str_Thu_3:
 	.asciiz "Tues"
-Thu_4:
+str_Thu_4:
 	.asciiz "Wed"
-Thu_5:
+str_Thu_5:
 	.asciiz "Thurs"
-Thu_6:
+str_Thu_6:
 	.asciiz "Fri"
-Thu_7:
+str_Thu_7:
 	.asciiz "Sat"
 
         .text
@@ -139,6 +139,8 @@ main:
 	beq $s2, $t0, main_yc1
 	addi $t0, $zero, 2	# yeu cau 2
 	beq $s2, $t0, main_yc2
+	addi $t0, $zero, 3	# yeu cau 3
+	beq $s2, $t0, main_yc3
 	addi $t0, $zero, 4 	# yeu cau 4
 	beq $s2, $t0, main_yc4
 	addi $t0, $zero, 5 	# yeu cau 5
@@ -175,6 +177,14 @@ main_yc2:
 
 	# In dinh dang da chuyen doi
 	add $a0, $zero, $s0
+	addi $v0, $zero, 4	# syscall print string
+	syscall
+	j main_exit
+
+main_yc3:
+	add $a0, $zero, $s0
+	jal xacDinhThu
+	add $a0, $zero, $v0
 	addi $v0, $zero, 4	# syscall print string
 	syscall
 	j main_exit
@@ -1121,4 +1131,74 @@ ngayTuyetDoi_next:
 	add $v0, $v0, $t0 	# ketqua = nam * 365 + ngayTuyetDoiTrongNam + soNamNhuan
 	lw $ra, 4($sp) 		# Tra lai $ra
 	addi $sp, $sp, 8
+	jr $ra
+
+# Ham tinh thu cua 1 ngay
+# so nguyen 1 -> 7 tuong ung chu nhat -> thu 7
+# Xac dinh ngay 31/12/1 TCN la thu 7 -> bieu dien boi thu 7
+# Khoang cach giua mot ngay bat ki voi ngay 31/12/1 TCN chinh la gia tri ngay tuyet doi cua no
+# Cong thuc xac dinh thu cua ngay bat ki
+# thuNgayBatKi = (thuNgayCuoiTCN + giaTriNgayTuyetDoi mod 7) mod 7 = (7 + giaTriNgayTuyetDoi mod 7) mod 7
+# Neu thu duoc ket qua la 0, ta cong ket qua them cho 7
+#	$a0 TIME
+xacDinhThu:
+	# save to stack
+	addi $sp, $sp, -16
+	sw $ra, 12($sp)
+
+	jal Year
+	sw $v0, 8($sp)		# save Year(TIME)
+	jal Month
+	sw $v0, 4($sp)		# save Month(TIME)
+	jal Day
+	sw $v0, 0($sp)		# save Day(TIME)
+
+	lw $a0, 8($sp)		# get Year(TIME)
+	lw $a1, 4($sp)		# get Month(TIME)
+	lw $a2, 0($sp)		# get Day(TIME)
+	jal ngayTuyetDoi	# Tinh gia tri tuyet doi cua ngay, ket qua luu trong $v0
+	addi $t0, $zero, 7 	# Gan bien tam t0 = 7
+	div $v0, $t0
+	mfhi $v0 		# $v0 = giaTriNgayTuyetDoi mod 7
+	addi $v0, $v0, 7	# $v0 = giaTriNgayTuyetDoi mod 7 + 7
+	div $v0, $t0
+	mfhi $v0 		# $v0 = (7 + giaTriNgayTuyetDoi mod 7) mod 7
+	bne $v0, $zero, xacDinhThu_next
+	addi $v0, $zero, 7	# Neu ket qua bang 0 thi lay ket qua la 7
+xacDinhThu_next:
+	addi $t0, $zero, 1 	# Gan bien tam t0 bang 1 (Chu nhat)
+	bne $v0, $t0, xacDinhThu_thu2
+	la $v0, str_Chu_nhat
+	j xacDinhThu_end
+xacDinhThu_thu2:
+	addi $t0, $zero, 2 	# Gan bien tam t0 bang 2 (Thu 2)
+	bne $v0, $t0, xacDinhThu_thu3
+	la $v0, str_Thu_2
+	j xacDinhThu_end
+xacDinhThu_thu3:
+	addi $t0, $zero, 3 	# Gan bien tam t0 bang 3 (Thu 3)
+	bne $v0, $t0, xacDinhThu_thu4
+	la $v0, str_Thu_3
+	j xacDinhThu_end
+xacDinhThu_thu4:
+	addi $t0, $zero, 4 	#Gan bien tam t0 bang 4 (Thu 4)
+	bne $v0, $t0, xacDinhThu_thu5
+	la $v0, str_Thu_4
+	j xacDinhThu_end
+xacDinhThu_thu5:
+	addi $t0, $zero, 5 	#Gan bien tam t0 bang 5 (Thu 5)
+	bne $v0, $t0, xacDinhThu_thu6
+	la $v0, str_Thu_5
+	j xacDinhThu_end
+xacDinhThu_thu6:
+	addi $t0, $zero, 6 	# Gan bien tam t0 bang 6 (Thu 6)
+	bne $v0, $t0, xacDinhThu_thu7
+	la $v0, str_Thu_6
+	j xacDinhThu_end
+xacDinhThu_thu7:
+	la $v0, str_Thu_7
+xacDinhThu_end:
+	# restore from stack
+	lw $ra, 12($sp)
+	addi $sp, $sp, 16
 	jr $ra
