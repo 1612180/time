@@ -98,12 +98,22 @@ msg_hai_nam_nhuan_next:
 #	$s2 yeu cau cua nguoi dung
 main:
 	# Nhap ngay, thang, nam TIME_1 luu vao $s0
+	# Neu khong hop le nhap lai
+main_nhap_time:
 	la $a0, TIME_1
 	la $a1, str_temp
 	jal nhap_time
 	add $s0, $zero, $v0	# save TIME_1
 	add $s1, $zero, $v1	# save hop le TIME_1
+	beq $s1, $0, main_nhap_lai_time 	# khong hop le
+	j main_in_yeucau
+main_nhap_lai_time:
+	la $a0, msg_input_khonghople
+	addi $v0, $zero, 4	# syscall print string
+	syscall
+	j main_nhap_time
 
+main_in_yeucau:
 	# In ra toan bo yeu cau
 	la $a0, yeu_cau_chon
 	addi $v0, $zero, 4	# syscall print string
@@ -261,7 +271,8 @@ main_yc_khonghople:
 	la $a0, msg_yc_khonghople
 	addi $v0, $zero, 4	# syscall print string
 	syscall
-	j main_exit
+	j main_in_yeucau
+	# j main_exit
 
 main_exit:
         addi $v0, $zero, 10
